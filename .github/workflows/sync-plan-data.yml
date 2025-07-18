@@ -1,0 +1,98 @@
+name: Sync PLAN Data
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC (adjust timezone as needed)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      force_sync:
+        description: 'Force sync even if no changes'
+        required: false
+        default: 'false'
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'scripts/package-lock.json'
+    
+    - name: Install script dependencies
+      run: |
+        cd scripts
+        npm install
+    
+    - name: Download PLAN database from server
+      env:
+        GGSERVERS_HOST: ${{ secrets.GGSERVERS_HOST }}
+        GGSERVERS_USERNAME: ${{ secrets.GGSERVERS_USERNAME }}
+        GGSERVERS_PASSWORD: ${{ secrets.GGSERVERS_PASSWORD }}
+        GGSERVERS_PORT: ${{ secrets.GGSERVERS_PORT }}
+      run: |
+        # Create temp directory
+        mkdir -p scripts/temp
+        
+        # Download using FTP/SFTP (you'll need to customize this based on your server)
+        # For now, we'll use a placeholder that expects manual upload
+        echo "⚠️  Manual database download required"
+        echo "Please ensure Plan.db is available or implement automated download"
+        
+        # Example FTP download (uncomment and modify as needed):
+        # sudo apt-get update && sudo apt-get install -y lftp
+        # lftp -c "set ftp:ssl-allow no; open -u $GGSERVERS_USERNAME,$GGSERVERS_PASSWORD $GGSERVERS_HOST; get /path/to/Plan/Plan.db -o scripts/temp/Plan.db"
+        
+        # Example SFTP download (uncomment and modify as needed):
+        # sudo apt-get update && sudo apt-get install -y sshpass
+        # sshpass -p "$GGSERVERS_PASSWORD" sftp -o StrictHostKeyChecking=no $GGSERVERS_USERNAME@$GGSERVERS_HOST:/path/to/Plan/Plan.db scripts/temp/Plan.db
+        
+        # For demo purposes, copy the existing sample data
+        if [ ! -f "scripts/temp/Plan.db" ]; then
+          echo "No Plan.db found, using sample data"
+          # The script will use the existing sample JSON data
+        fi
+    
+    - name: Sync PLAN data to JSON
+      run: |
+        cd scripts
+        npm run sync
+    
+    - name: Check for changes
+      id: changes
+      run: |
+        if git diff --quiet public/data/leaderboards.json; then
+          echo "changes=false" >> $GITHUB_OUTPUT
+          echo "No changes detected in leaderboard data"
+        else
+          echo "changes=true" >> $GITHUB_OUTPUT
+          echo "Changes detected in leaderboard data"
+        fi
+    
+    - name: Commit and push changes
+      if: steps.changes.outputs.changes == 'true' || github.event.inputs.force_sync == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add public/data/leaderboards.json
+        git commit -m "🤖 Update leaderboard data - $(date '+%Y-%m-%d %H:%M:%S UTC')"
+        git push
+    
+    - name: Deploy to Vercel (trigger)
+      if: steps.changes.outputs.changes == 'true' || github.event.inputs.force_sync == 'true'
+      run: |
+        echo "✅ Data updated, Vercel will automatically redeploy"
+    
+    - name: Cleanup
+      run: |
+        rm -rf scripts/temp
+        echo "🧹 Cleanup completed"

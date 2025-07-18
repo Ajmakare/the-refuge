@@ -1,0 +1,520 @@
+/* Basic reset and styling without Tailwind */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  
+  /* Modern clean palette */
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --secondary: #8b5cf6;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --neutral-light: #f8fafc;
+  --neutral: #64748b;
+  --neutral-dark: #334155;
+  
+  /* Glass morphism effects */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: #0a0a0a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.minecraft-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px var(--glass-shadow);
+  padding: 32px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.minecraft-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+
+.minecraft-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px var(--glass-shadow);
+  border-color: var(--primary);
+}
+
+.minecraft-button {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: 12px;
+  color: white;
+  padding: 16px 32px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.minecraft-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.minecraft-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.minecraft-button:hover::before {
+  left: 100%;
+}
+
+.minecraft-button.discord {
+  background: linear-gradient(135deg, #5865F2, #4752C4);
+  box-shadow: 0 4px 16px rgba(88, 101, 242, 0.3);
+}
+
+.minecraft-button.discord:hover {
+  box-shadow: 0 8px 24px rgba(88, 101, 242, 0.4);
+}
+
+.minecraft-button.secondary {
+  background: linear-gradient(135deg, var(--neutral), var(--neutral-dark));
+  box-shadow: 0 4px 16px rgba(100, 116, 139, 0.3);
+}
+
+.minecraft-button.secondary:hover {
+  box-shadow: 0 8px 24px rgba(100, 116, 139, 0.4);
+}
+
+/* Modern Clean Buttons */
+.modern-button {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: white;
+  padding: 16px 32px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+}
+
+.modern-button.primary {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9));
+  border-color: rgba(99, 102, 241, 0.5);
+  font-weight: 600;
+}
+
+.modern-button.primary:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(79, 70, 229, 1));
+  box-shadow: 0 12px 48px rgba(99, 102, 241, 0.4);
+}
+
+.modern-button.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.modern-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.grid {
+  display: grid;
+  gap: 24px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.gap-6 {
+  gap: 24px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-white {
+  color: white;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+}
+
+.text-4xl {
+  font-size: 2.25rem;
+}
+
+.text-5xl {
+  font-size: 3rem;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.mb-6 {
+  margin-bottom: 24px;
+}
+
+.mb-8 {
+  margin-bottom: 32px;
+}
+
+.mt-12 {
+  margin-top: 48px;
+}
+
+.p-4 {
+  padding: 16px;
+}
+
+.p-6 {
+  padding: 24px;
+}
+
+.p-8 {
+  padding: 32px;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Scroll Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animation Classes */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.slide-up {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.slide-left {
+  opacity: 0;
+  transform: translateX(50px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+.slide-right {
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+.animate-in {
+  opacity: 1 !important;
+  transform: translate(0, 0) !important;
+}
+
+/* Staggered animations for children */
+.stagger-children > * {
+  transition-delay: calc(var(--stagger-delay, 0) * 0.1s);
+}
+
+@media (max-width: 768px) {
+  .text-5xl {
+    font-size: 2rem;
+  }
+  
+  .text-4xl {
+    font-size: 1.75rem;
+  }
+  
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Mobile responsive adjustments */
+  .hero-content {
+    flex-direction: column !important;
+    gap: 40px !important;
+  }
+  
+  .hero-sidebar {
+    flex: none !important;
+    width: 100% !important;
+  }
+  
+  .hero-sidebar .ad-placeholder {
+    height: 250px !important;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  /* Hide fixed sidebar ad on mobile */
+  .fixed-sidebar-ad {
+    display: none !important;
+  }
+  
+  /* Mobile navigation positioning */
+  nav {
+    position: fixed !important;
+    top: 16px !important;
+    right: 16px !important;
+    left: 16px !important;
+    justify-content: center !important;
+  }
+  
+  nav .modern-button {
+    padding: 12px 20px !important;
+    font-size: 14px !important;
+  }
+  
+  /* Mobile hero section */
+  .container {
+    padding: 0 16px !important;
+    max-width: 100% !important;
+  }
+  
+  /* Mobile logo sizing */
+  .hero-logo {
+    max-width: 100% !important;
+    height: auto !important;
+    margin-bottom: 32px !important;
+  }
+  
+  /* Mobile text sizing */
+  .hero-tagline {
+    font-size: 16px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .hero-description {
+    font-size: 20px !important;
+    margin-bottom: 32px !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Mobile buttons */
+  .hero-buttons {
+    flex-direction: column !important;
+    gap: 16px !important;
+    align-items: stretch !important;
+  }
+  
+  .hero-buttons .modern-button {
+    padding: 16px 24px !important;
+    font-size: 16px !important;
+    text-align: center !important;
+  }
+  
+  /* Mobile sections */
+  .section-title {
+    font-size: 32px !important;
+    margin-bottom: 32px !important;
+  }
+  
+  .minecraft-card {
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .footer-content {
+    flex-direction: column !important;
+    gap: 20px !important;
+    text-align: center !important;
+  }
+  
+  .footer-ad {
+    flex: none !important;
+    width: 100% !important;
+  }
+  
+  /* Reduce margins on mobile */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Improve touch targets */
+  .modern-button {
+    min-height: 44px !important;
+  }
+  
+  /* Leaderboards mobile specific */
+  .leaderboard-content {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  
+  .leaderboard-sidebar {
+    width: 100% !important;
+    order: -1 !important;
+  }
+  
+  .player-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  
+  .player-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+}
