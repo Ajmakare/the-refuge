@@ -586,6 +586,11 @@ function detectColumnStructure(db, tables, callback) {
                                 columnNames.includes('session_length') ? 'session_length' :
                                 columnNames.includes('time_played') ? 'time_played' : null;
         
+        // Check for session-based data that needs aggregation
+        columnMapping.sessionStart = columnNames.includes('session_start') ? 'session_start' : null;
+        columnMapping.sessionEnd = columnNames.includes('session_end') ? 'session_end' : null;
+        columnMapping.userId = columnNames.includes('user_id') ? 'user_id' : null;
+        
         columnMapping.sessions = columnNames.includes('session_count') ? 'session_count' :
                                 columnNames.includes('sessions') ? 'sessions' : null;
         
@@ -616,6 +621,10 @@ function detectColumnStructure(db, tables, callback) {
         columnMapping.playerKills = columnNames.includes('player_kills') ? 'player_kills' :
                                    columnNames.includes('pvp_kills') ? 'pvp_kills' :
                                    columnNames.includes('player_kill_count') ? 'player_kill_count' : null;
+        
+        // Check for individual kill records that need aggregation
+        columnMapping.killerUuid = columnNames.includes('killer_uuid') ? 'killer_uuid' : null;
+        columnMapping.victimUuid = columnNames.includes('victim_uuid') ? 'victim_uuid' : null;
       }
       checkComplete();
     });
@@ -667,6 +676,73 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, checkComple
         }
         checkComplete();
       });
+    } else if (tables.sessions && columns.sessionStart && columns.sessionEnd && columns.userId) {
+      // Aggregated session data query (for your database structure)
+      console.log('📊 Aggregating session data from individual session records...');
+      const aggregatedPlayersQuery = `
+        SELECT 
+          p.uuid,
+          p.name,
+          SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as playtime,
+          COUNT(s.id) as sessions,
+          p.registered as join_date,
+          MAX(s.${columns.sessionEnd}) as last_seen
+        FROM ${tables.players} p
+        LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+        GROUP BY p.uuid, p.name, p.registered
+        HAVING SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) > 0
+        ORDER BY playtime DESC
+        LIMIT ?
+      `;
+
+      db.all(aggregatedPlayersQuery, [CONFIG.limits.mostActive], (err, rows) => {
+        if (err) {
+          console.error('❌ Error querying aggregated players:', err.message);
+          console.log('💡 Falling back to basic player list...');
+          
+          // Fallback to basic player list
+          const basicPlayersQuery = `
+            SELECT uuid, name, registered as join_date
+            FROM ${tables.players} 
+            ORDER BY registered DESC
+            LIMIT ?
+          `;
+
+          db.all(basicPlayersQuery, [CONFIG.limits.mostActive], (err2, rows2) => {
+            if (!err2) {
+              console.log(`🔍 Basic fallback query returned ${rows2.length} rows`);
+              leaderboardData.mostActive = rows2.map(row => ({
+                uuid: row.uuid,
+                name: row.name,
+                playtime: 0,
+                sessions: 0,
+                kills: { mob: 0, player: 0 },
+                deaths: 0,
+                blocksPlaced: 0,
+                blocksBroken: 0,
+                lastSeen: new Date(row.join_date).toISOString(),
+                joinDate: new Date(row.join_date).toISOString()
+              }));
+            }
+            checkComplete();
+          });
+        } else {
+          console.log(`🔍 Aggregated session query returned ${rows.length} rows`);
+          leaderboardData.mostActive = rows.map(row => ({
+            uuid: row.uuid,
+            name: row.name,
+            playtime: row.playtime || 0,
+            sessions: row.sessions || 0,
+            kills: { mob: 0, player: 0 },
+            deaths: 0,
+            blocksPlaced: 0,
+            blocksBroken: 0,
+            lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
+            joinDate: new Date(row.join_date).toISOString()
+          }));
+          checkComplete();
+        }
+      });
     } else {
       // Fallback: Basic player list
       console.log('📋 No session data available, showing basic player list...');
@@ -704,44 +780,88 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, checkComple
   }
 
   // Query 2: Top Killers
-  if (tables.players && tables.kills && (columns.mobKills || columns.playerKills)) {
-    const mobKillsCol = columns.mobKills || '0';
-    const playerKillsCol = columns.playerKills || '0';
-    
-    const killersQuery = `
-      SELECT 
-        p.uuid, p.name, p.registered as join_date,
-        ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) as mob_kills` : '0 as mob_kills'},
-        ${playerKillsCol !== '0' ? `COALESCE(k.${playerKillsCol}, 0) as player_kills` : '0 as player_kills'}
-      FROM ${tables.players} p
-      LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid
-      WHERE ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) > 0` : '1=0'}
-      ORDER BY ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) DESC` : 'p.uuid'}
-      LIMIT ?
-    `;
+  if (tables.players && tables.kills) {
+    if (columns.mobKills || columns.playerKills) {
+      // Direct aggregated kill data
+      const mobKillsCol = columns.mobKills || '0';
+      const playerKillsCol = columns.playerKills || '0';
+      
+      const killersQuery = `
+        SELECT 
+          p.uuid, p.name, p.registered as join_date,
+          ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) as mob_kills` : '0 as mob_kills'},
+          ${playerKillsCol !== '0' ? `COALESCE(k.${playerKillsCol}, 0) as player_kills` : '0 as player_kills'}
+        FROM ${tables.players} p
+        LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid
+        WHERE ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) > 0` : '1=0'}
+        ORDER BY ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) DESC` : 'p.uuid'}
+        LIMIT ?
+      `;
 
-    db.all(killersQuery, [CONFIG.limits.topKillers], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying top killers:', err.message);
-      } else {
-        console.log(`🔍 Top Killers query returned ${rows.length} rows`);
-        leaderboardData.topKillers = rows.map(row => ({
-          uuid: row.uuid,
-          name: row.name,
-          playtime: 0,
-          sessions: 0,
-          kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
-          deaths: 0,
-          blocksPlaced: 0,
-          blocksBroken: 0,
-          lastSeen: new Date(row.join_date).toISOString(),
-          joinDate: new Date(row.join_date).toISOString()
-        }));
-      }
+      db.all(killersQuery, [CONFIG.limits.topKillers], (err, rows) => {
+        if (err) {
+          console.error('❌ Error querying top killers:', err.message);
+        } else {
+          console.log(`🔍 Top Killers query returned ${rows.length} rows`);
+          leaderboardData.topKillers = rows.map(row => ({
+            uuid: row.uuid,
+            name: row.name,
+            playtime: 0,
+            sessions: 0,
+            kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
+            deaths: 0,
+            blocksPlaced: 0,
+            blocksBroken: 0,
+            lastSeen: new Date(row.join_date).toISOString(),
+            joinDate: new Date(row.join_date).toISOString()
+          }));
+        }
+        checkComplete();
+      });
+    } else if (columns.killerUuid) {
+      // Aggregate individual kill records (for your database structure)
+      console.log('📊 Aggregating kill data from individual kill records...');
+      
+      const aggregatedKillsQuery = `
+        SELECT 
+          p.uuid, p.name, p.registered as join_date,
+          COUNT(k.id) as total_kills,
+          0 as mob_kills,
+          COUNT(CASE WHEN k.${columns.victimUuid} != k.${columns.killerUuid} THEN 1 END) as player_kills
+        FROM ${tables.players} p
+        LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
+        GROUP BY p.uuid, p.name, p.registered
+        HAVING COUNT(k.id) > 0
+        ORDER BY total_kills DESC
+        LIMIT ?
+      `;
+
+      db.all(aggregatedKillsQuery, [CONFIG.limits.topKillers], (err, rows) => {
+        if (err) {
+          console.error('❌ Error querying aggregated kills:', err.message);
+        } else {
+          console.log(`🔍 Aggregated kills query returned ${rows.length} rows`);
+          leaderboardData.topKillers = rows.map(row => ({
+            uuid: row.uuid,
+            name: row.name,
+            playtime: 0,
+            sessions: 0,
+            kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
+            deaths: 0,
+            blocksPlaced: 0,
+            blocksBroken: 0,
+            lastSeen: new Date(row.join_date).toISOString(),
+            joinDate: new Date(row.join_date).toISOString()
+          }));
+        }
+        checkComplete();
+      });
+    } else {
+      console.log('⚠️  Skipping Top Killers query - no kill data columns found');
       checkComplete();
-    });
+    }
   } else {
-    console.log('⚠️  Skipping Top Killers query - missing required tables or columns');
+    console.log('⚠️  Skipping Top Killers query - missing required tables');
     checkComplete();
   }
 
