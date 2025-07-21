@@ -248,7 +248,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 3382,
+        "mob": 3400,
         "player": 1
       },
       "deaths": 0,
@@ -308,7 +308,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 703,
+        "mob": 704,
         "player": 3
       },
       "deaths": 0,
@@ -775,7 +775,7 @@
       "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
       "name": "CDBBoss",
       "playtime": 0,
-      "sessions": 16,
+      "sessions": 17,
       "kills": {
         "mob": 0,
         "player": 0
@@ -787,10 +787,25 @@
       "joinDate": "2025-07-17T21:20:52.127Z"
     },
     {
+      "uuid": "0a5e76cc-d1a3-4b63-9551-801739eb672f",
+      "name": "Lord_Unicronus",
+      "playtime": 0,
+      "sessions": 20,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 7,
+      "afkTime": 0,
+      "daysActive": 0,
+      "lastSeen": "2025-07-17T21:10:41.270Z",
+      "joinDate": "2025-07-17T21:10:41.270Z"
+    },
+    {
       "uuid": "69496c26-9e35-4107-83cb-cc694f133712",
       "name": "VerboseEwe67337",
       "playtime": 0,
-      "sessions": 18,
+      "sessions": 20,
       "kills": {
         "mob": 0,
         "player": 0
@@ -830,21 +845,6 @@
       "daysActive": 0,
       "lastSeen": "2025-07-18T02:16:22.829Z",
       "joinDate": "2025-07-18T02:16:22.829Z"
-    },
-    {
-      "uuid": "0a5e76cc-d1a3-4b63-9551-801739eb672f",
-      "name": "Lord_Unicronus",
-      "playtime": 0,
-      "sessions": 19,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 4,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:10:41.270Z",
-      "joinDate": "2025-07-17T21:10:41.270Z"
     },
     {
       "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
@@ -907,5 +907,5 @@
       "joinDate": "2025-07-17T21:31:29.635Z"
     }
   ],
-  "lastUpdated": "2025-07-21T15:12:50.837Z"
+  "lastUpdated": "2025-07-21T15:16:09.837Z"
 }
