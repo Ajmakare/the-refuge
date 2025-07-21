@@ -77,16 +77,26 @@ export default function Leaderboards() {
     let result: PlayerStats[];
     switch (activeTab) {
       case 'active': 
-        result = data.mostActive;
+        // For active players, show all players but sort by playtime (then by join date)
+        result = [...data.mostActive].sort((a, b) => {
+          if (b.playtime !== a.playtime) return b.playtime - a.playtime;
+          return new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime();
+        });
         break;
       case 'killers': 
-        result = data.topKillers;
+        // For killers, only show players with kills > 0, or fallback to all players
+        result = data.topKillers.length > 0 ? data.topKillers : 
+          data.mostActive.filter(p => (p.kills.mob + p.kills.player) > 0);
         break;
       case 'sessions': 
-        result = data.longestSessions;
+        // For sessions, only show players with sessions > 0, or fallback to active players
+        result = data.longestSessions.length > 0 ? data.longestSessions :
+          data.mostActive.filter(p => p.sessions > 0);
         break;
       case 'builders': 
-        result = data.topBuilders;
+        // For builders, only show players with blocks > 0, or fallback to all players
+        result = data.topBuilders.length > 0 ? data.topBuilders :
+          data.mostActive.filter(p => p.blocksPlaced > 0);
         break;
       default: 
         result = [];
@@ -147,11 +157,31 @@ export default function Leaderboards() {
 
     const getDisplayStat = () => {
       switch (activeTab) {
-        case 'active': return { value: formatPlaytime(player.playtime), label: 'Playtime' };
-        case 'killers': return { value: formatNumber(player.kills.mob + player.kills.player), label: 'Total Kills' };
-        case 'sessions': return { value: player.sessions.toString(), label: 'Sessions' };
-        case 'builders': return { value: formatNumber(player.blocksPlaced), label: 'Blocks Placed' };
-        default: return { value: formatPlaytime(player.playtime), label: 'Playtime' };
+        case 'active': 
+          return { 
+            value: player.playtime > 0 ? formatPlaytime(player.playtime) : 'New Player', 
+            label: player.playtime > 0 ? 'Playtime' : 'Just Joined' 
+          };
+        case 'killers': 
+          return { 
+            value: formatNumber(player.kills.mob + player.kills.player), 
+            label: 'Total Kills' 
+          };
+        case 'sessions': 
+          return { 
+            value: player.sessions > 0 ? player.sessions.toString() : 'Starting', 
+            label: player.sessions > 0 ? 'Sessions' : 'Building History' 
+          };
+        case 'builders': 
+          return { 
+            value: player.blocksPlaced > 0 ? formatNumber(player.blocksPlaced) : 'Starting', 
+            label: player.blocksPlaced > 0 ? 'Blocks Placed' : 'Ready to Build' 
+          };
+        default: 
+          return { 
+            value: player.playtime > 0 ? formatPlaytime(player.playtime) : 'New Player', 
+            label: player.playtime > 0 ? 'Playtime' : 'Just Joined' 
+          };
       }
     };
 
@@ -166,7 +196,7 @@ export default function Leaderboards() {
         transform: 'translateY(0)'
       }}>
         <div className="player-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1', minWidth: '250px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1', minWidth: '280px' }}>
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -183,16 +213,44 @@ export default function Leaderboards() {
               width: '56px',
               height: '56px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px',
-              fontWeight: '700',
-              color: 'white',
+              overflow: 'hidden',
+              position: 'relative',
               boxShadow: '0 4px 16px rgba(99, 102, 241, 0.3)'
             }}>
-              {player.name.charAt(0).toUpperCase()}
+              <img 
+                src={`https://mc-heads.net/avatar/${player.name}/56`}
+                alt={`${player.name}'s Minecraft head`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  // Fallback to initial if avatar fails to load
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
+                }}
+              />
+              <div style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                display: 'none',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                fontWeight: '700',
+                color: 'white',
+                position: 'absolute',
+                top: 0,
+                left: 0
+              }}>
+                {player.name.charAt(0).toUpperCase()}
+              </div>
             </div>
             <div>
               <h3 style={{ 
@@ -236,12 +294,12 @@ export default function Leaderboards() {
           </div>
           
           {/* Additional Stats */}
-          <div className="player-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '16px', flex: '1', minWidth: '280px' }}>
+          <div className="player-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '16px', flex: '1', minWidth: '320px' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ 
                 fontSize: '16px', 
                 fontWeight: '600',
-                color: 'var(--success)',
+                color: player.kills.mob > 0 ? 'var(--success)' : 'rgba(255, 255, 255, 0.4)',
                 fontFamily: 'Inter, sans-serif'
               }}>
                 {formatNumber(player.kills.mob)}
@@ -254,7 +312,20 @@ export default function Leaderboards() {
               <div style={{ 
                 fontSize: '16px', 
                 fontWeight: '600',
-                color: 'var(--accent)',
+                color: player.kills.player > 0 ? 'var(--error)' : 'rgba(255, 255, 255, 0.4)',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {formatNumber(player.kills.player)}
+              </div>
+              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
+                PvP Kills
+              </div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                fontSize: '16px', 
+                fontWeight: '600',
+                color: player.blocksPlaced > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
                 fontFamily: 'Inter, sans-serif'
               }}>
                 {formatNumber(player.blocksPlaced)}
@@ -267,26 +338,26 @@ export default function Leaderboards() {
               <div style={{ 
                 fontSize: '16px', 
                 fontWeight: '600',
-                color: 'var(--error)',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                {player.deaths}
-              </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
-                Deaths
-              </div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ 
-                fontSize: '16px', 
-                fontWeight: '600',
-                color: 'var(--warning)',
+                color: player.sessions > 0 ? 'var(--warning)' : 'rgba(255, 255, 255, 0.4)',
                 fontFamily: 'Inter, sans-serif'
               }}>
                 {player.sessions}
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
                 Sessions
+              </div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                fontSize: '14px', 
+                fontWeight: '500',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                {formatDate(player.lastSeen)}
+              </div>
+              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'Inter, sans-serif' }}>
+                Last Seen
               </div>
             </div>
           </div>
@@ -530,12 +601,27 @@ export default function Leaderboards() {
                       color: 'rgba(255, 255, 255, 0.6)',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-                      <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '8px', color: 'white' }}>
-                        No data available
+                      <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+                        {activeTab === 'active' ? '⏱️' : 
+                         activeTab === 'killers' ? '⚔️' : 
+                         activeTab === 'sessions' ? '🎮' : '🏗️'}
+                      </div>
+                      <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: 'white' }}>
+                        {activeTab === 'active' ? 'Players are joining!' : 
+                         activeTab === 'killers' ? 'No combat data yet' : 
+                         activeTab === 'sessions' ? 'Building session history' : 'No building data yet'}
                       </h3>
-                      <p style={{ fontSize: '16px' }}>
-                        Leaderboard data is currently being processed. Check back soon!
+                      <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+                        {activeTab === 'active' ? 
+                          `${data?.mostActive?.length || 0} players have joined the server.` :
+                         activeTab === 'killers' ? 
+                          'Players haven\'t started battling mobs or each other yet.' :
+                         activeTab === 'sessions' ?
+                          'Players are building up their play session history.' :
+                          'Players haven\'t started building yet.'}
+                      </p>
+                      <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                        Data syncs automatically every 30 minutes as players are active.
                       </p>
                     </div>
                   );
@@ -584,6 +670,19 @@ export default function Leaderboards() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
+                      Top Killer:
+                    </span>
+                    <span style={{ 
+                      fontSize: '16px', 
+                      fontWeight: '700', 
+                      color: 'var(--error)',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {data && data.topKillers[0] ? data.topKillers[0].name : 'No data yet'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
                       Top Builder:
                     </span>
                     <span style={{ 
@@ -592,7 +691,20 @@ export default function Leaderboards() {
                       color: 'var(--accent)',
                       fontFamily: 'Inter, sans-serif'
                     }}>
-                      {data && data.topBuilders[0] ? data.topBuilders[0].name : 'Loading...'}
+                      {data && data.topBuilders[0] ? data.topBuilders[0].name : 'No data yet'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
+                      Last Updated:
+                    </span>
+                    <span style={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600', 
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {data ? new Date(data.lastUpdated).toLocaleTimeString() : '--:--'}
                     </span>
                   </div>
                 </div>
