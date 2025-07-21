@@ -1,700 +1,137 @@
 {
   "mostActive": [
     {
-      "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
-      "name": "BroZGold",
-      "playtime": 96649631,
-      "sessions": 24,
+      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "Steve_Builder",
+      "playtime": 7200000,
+      "sessions": 45,
       "kills": {
-        "mob": 195,
-        "player": 0
+        "mob": 1250,
+        "player": 5
       },
-      "deaths": 0,
-      "afkTime": 2231081,
-      "avgSessionLength": 67,
-      "activityScore": 78414840,
-      "lastSeen": "2025-07-21T21:25:40.450Z",
-      "joinDate": "2025-07-18T00:15:11.606Z"
-    },
-    {
-      "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
-      "name": "McChickenribs",
-      "playtime": 86997670,
-      "sessions": 18,
-      "kills": {
-        "mob": 865,
-        "player": 0
-      },
-      "deaths": 0,
+      "deaths": 32,
       "afkTime": 0,
-      "avgSessionLength": 80,
-      "activityScore": 72478136,
-      "lastSeen": "2025-07-21T21:15:33.595Z",
-      "joinDate": "2025-07-17T21:09:11.671Z"
+      "avgSessionLength": 3,
+      "lastSeen": "2025-07-21T01:33:03.091Z",
+      "joinDate": "2025-06-21T01:33:03.091Z"
     },
     {
-      "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
-      "name": "EnderCube",
-      "playtime": 79035568,
-      "sessions": 18,
+      "uuid": "456e7890-e89b-12d3-a456-426614174001",
+      "name": "Alex_Miner",
+      "playtime": 6900000,
+      "sessions": 38,
       "kills": {
-        "mob": 218,
-        "player": 0
+        "mob": 980,
+        "player": 2
       },
-      "deaths": 0,
-      "afkTime": 3143612,
-      "avgSessionLength": 73,
-      "activityScore": 63593564,
-      "lastSeen": "2025-07-21T20:17:43.441Z",
-      "joinDate": "2025-07-17T21:04:41.308Z"
-    },
-    {
-      "uuid": "972948e6-8c11-4381-94af-15432e6ba728",
-      "name": "Stupidvirgo",
-      "playtime": 74697532,
-      "sessions": 14,
-      "kills": {
-        "mob": 380,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 3236013,
-      "avgSessionLength": 88,
-      "activityScore": 60049215,
-      "lastSeen": "2025-07-21T06:05:44.462Z",
-      "joinDate": "2025-07-17T21:58:56.221Z"
-    },
-    {
-      "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
-      "name": "Pentatope",
-      "playtime": 63052474,
-      "sessions": 11,
-      "kills": {
-        "mob": 2011,
-        "player": 0
-      },
-      "deaths": 0,
+      "deaths": 28,
       "afkTime": 0,
-      "avgSessionLength": 95,
-      "activityScore": 53321979,
-      "lastSeen": "2025-07-21T21:43:18.452Z",
-      "joinDate": "2025-07-17T23:19:21.241Z"
-    },
-    {
-      "uuid": "1bd7d04a-ebb3-4ee7-b687-c87b48db9071",
-      "name": "OgLmx",
-      "playtime": 67172003,
-      "sessions": 24,
-      "kills": {
-        "mob": 2390,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 9224812,
-      "avgSessionLength": 46,
-      "activityScore": 49237752,
-      "lastSeen": "2025-07-21T20:37:28.342Z",
-      "joinDate": "2025-07-17T21:04:24.557Z"
-    },
-    {
-      "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
-      "name": "CDBBoss",
-      "playtime": 52190683,
-      "sessions": 20,
-      "kills": {
-        "mob": 3736,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 3555907,
-      "avgSessionLength": 43,
-      "activityScore": 41787820,
-      "lastSeen": "2025-07-21T18:45:17.403Z",
-      "joinDate": "2025-07-17T21:20:52.127Z"
-    },
-    {
-      "uuid": "818fbc02-aff0-4e37-9634-2df8825987e9",
-      "name": "DeliciousChili1",
-      "playtime": 44264805,
-      "sessions": 10,
-      "kills": {
-        "mob": 632,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 190840,
-      "avgSessionLength": 73,
-      "activityScore": 38139172,
-      "lastSeen": "2025-07-21T03:34:19.670Z",
-      "joinDate": "2025-07-17T21:06:31.763Z"
-    },
-    {
-      "uuid": "ef78e3c2-2859-4b12-9478-23323df75d85",
-      "name": "Mattaroni",
-      "playtime": 48633808,
-      "sessions": 7,
-      "kills": {
-        "mob": 94,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 5055966,
-      "avgSessionLength": 115,
-      "activityScore": 37022273,
-      "lastSeen": "2025-07-21T05:50:36.301Z",
-      "joinDate": "2025-07-18T02:16:22.829Z"
-    },
-    {
-      "uuid": "e1268111-5227-4862-9fca-9c8d7a029282",
-      "name": "Hefaest0s",
-      "playtime": 41455316,
-      "sessions": 4,
-      "kills": {
-        "mob": 214,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 1972175,
-      "avgSessionLength": 172,
-      "activityScore": 33026512,
-      "lastSeen": "2025-07-20T22:58:10.178Z",
-      "joinDate": "2025-07-17T21:29:15.973Z"
-    },
-    {
-      "uuid": "f42e00c8-774e-464d-a543-af11993b2983",
-      "name": "Kage45",
-      "playtime": 36804381,
-      "sessions": 29,
-      "kills": {
-        "mob": 229,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "avgSessionLength": 21,
-      "activityScore": 32323504,
-      "lastSeen": "2025-07-21T22:20:02.445Z",
-      "joinDate": "2025-07-17T22:03:11.334Z"
-    },
-    {
-      "uuid": "0c487333-338c-4068-b08c-d663ecea3486",
-      "name": "willisnothere",
-      "playtime": 64682466,
-      "sessions": 14,
-      "kills": {
-        "mob": 334,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 29216117,
-      "avgSessionLength": 77,
-      "activityScore": 29813079,
-      "lastSeen": "2025-07-21T22:12:32.962Z",
-      "joinDate": "2025-07-17T22:46:47.650Z"
-    },
-    {
-      "uuid": "0a5e76cc-d1a3-4b63-9551-801739eb672f",
-      "name": "Lord_Unicronus",
-      "playtime": 36796153,
-      "sessions": 20,
-      "kills": {
-        "mob": 704,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 3711571,
-      "avgSessionLength": 30,
-      "activityScore": 28627665,
-      "lastSeen": "2025-07-21T15:13:44.445Z",
-      "joinDate": "2025-07-17T21:10:41.270Z"
-    },
-    {
-      "uuid": "65b52db0-eb88-4f77-b348-497ec5aebec5",
-      "name": "k1ngslayer2105",
-      "playtime": 31674399,
-      "sessions": 9,
-      "kills": {
-        "mob": 472,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "avgSessionLength": 58,
-      "activityScore": 27499519,
-      "lastSeen": "2025-07-20T17:40:48.190Z",
-      "joinDate": "2025-07-18T15:34:15.407Z"
-    },
-    {
-      "uuid": "8a2499a5-d07b-4788-afd4-555630148f28",
-      "name": "Kerebros",
-      "playtime": 54863686,
-      "sessions": 8,
-      "kills": {
-        "mob": 8,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 24304912,
-      "avgSessionLength": 114,
-      "activityScore": 26607019,
-      "lastSeen": "2025-07-20T23:59:03.732Z",
-      "joinDate": "2025-07-17T21:31:29.635Z"
+      "avgSessionLength": 3,
+      "lastSeen": "2025-07-20T01:33:03.091Z",
+      "joinDate": "2025-06-06T01:33:03.091Z"
     }
   ],
   "topKillers": [
     {
-      "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
-      "name": "CDBBoss",
-      "playtime": 0,
-      "sessions": 0,
+      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "Steve_Builder",
+      "playtime": 7200000,
+      "sessions": 45,
       "kills": {
-        "mob": 3736,
-        "player": 1
+        "mob": 1250,
+        "player": 5
       },
-      "deaths": 0,
+      "deaths": 32,
       "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:20:52.127Z",
-      "joinDate": "2025-07-17T21:20:52.127Z"
+      "avgSessionLength": 3,
+      "activityScore": 0,
+      "lastSeen": "2025-07-21T01:33:03.091Z",
+      "joinDate": "2025-06-21T01:33:03.091Z"
     },
     {
-      "uuid": "69496c26-9e35-4107-83cb-cc694f133712",
-      "name": "VerboseEwe67337",
-      "playtime": 0,
-      "sessions": 0,
+      "uuid": "456e7890-e89b-12d3-a456-426614174001",
+      "name": "Alex_Miner",
+      "playtime": 6900000,
+      "sessions": 38,
       "kills": {
-        "mob": 3400,
-        "player": 1
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:08:29.988Z",
-      "joinDate": "2025-07-17T21:08:29.988Z"
-    },
-    {
-      "uuid": "c25e5dd7-1270-427e-8967-e7dc926844e3",
-      "name": "Madcards",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 3045,
+        "mob": 980,
         "player": 2
       },
-      "deaths": 0,
+      "deaths": 28,
       "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:10:27.723Z",
-      "joinDate": "2025-07-17T21:10:27.723Z"
-    },
-    {
-      "uuid": "1bd7d04a-ebb3-4ee7-b687-c87b48db9071",
-      "name": "OgLmx",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 2390,
-        "player": 4
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:04:24.557Z",
-      "joinDate": "2025-07-17T21:04:24.557Z"
-    },
-    {
-      "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
-      "name": "Pentatope",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 2011,
-        "player": 1
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T23:19:21.241Z",
-      "joinDate": "2025-07-17T23:19:21.241Z"
-    },
-    {
-      "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
-      "name": "McChickenribs",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 865,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:09:11.671Z",
-      "joinDate": "2025-07-17T21:09:11.671Z"
-    },
-    {
-      "uuid": "0a5e76cc-d1a3-4b63-9551-801739eb672f",
-      "name": "Lord_Unicronus",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 704,
-        "player": 3
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:10:41.270Z",
-      "joinDate": "2025-07-17T21:10:41.270Z"
-    },
-    {
-      "uuid": "27d3099d-8d5f-479f-a0b7-4440ac7fe674",
-      "name": "AndrewCole",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 666,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:29:01.503Z",
-      "joinDate": "2025-07-17T21:29:01.503Z"
-    },
-    {
-      "uuid": "f8235ef5-a816-4b85-9c91-738d5ae3e4a7",
-      "name": "Pri5marine",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 642,
-        "player": 1
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-18T03:04:55.559Z",
-      "joinDate": "2025-07-18T03:04:55.559Z"
-    },
-    {
-      "uuid": "818fbc02-aff0-4e37-9634-2df8825987e9",
-      "name": "DeliciousChili1",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 632,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:06:31.763Z",
-      "joinDate": "2025-07-17T21:06:31.763Z"
-    },
-    {
-      "uuid": "65b52db0-eb88-4f77-b348-497ec5aebec5",
-      "name": "k1ngslayer2105",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 472,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-18T15:34:15.407Z",
-      "joinDate": "2025-07-18T15:34:15.407Z"
-    },
-    {
-      "uuid": "972948e6-8c11-4381-94af-15432e6ba728",
-      "name": "Stupidvirgo",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 380,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:58:56.221Z",
-      "joinDate": "2025-07-17T21:58:56.221Z"
-    },
-    {
-      "uuid": "0c487333-338c-4068-b08c-d663ecea3486",
-      "name": "willisnothere",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 334,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T22:46:47.650Z",
-      "joinDate": "2025-07-17T22:46:47.650Z"
-    },
-    {
-      "uuid": "f42e00c8-774e-464d-a543-af11993b2983",
-      "name": "Kage45",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 229,
-        "player": 2
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T22:03:11.334Z",
-      "joinDate": "2025-07-17T22:03:11.334Z"
-    },
-    {
-      "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
-      "name": "EnderCube",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 218,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:04:41.308Z",
-      "joinDate": "2025-07-17T21:04:41.308Z"
+      "avgSessionLength": 3,
+      "activityScore": 0,
+      "lastSeen": "2025-07-20T01:33:03.091Z",
+      "joinDate": "2025-06-06T01:33:03.091Z"
     }
   ],
   "longestSessions": [
     {
-      "uuid": "e1268111-5227-4862-9fca-9c8d7a029282",
-      "name": "Hefaest0s",
-      "playtime": 41455316,
-      "sessions": 4,
+      "uuid": "456e7890-e89b-12d3-a456-426614174001",
+      "name": "Alex_Miner",
+      "playtime": 6900000,
+      "sessions": 38,
       "kills": {
-        "mob": 0,
-        "player": 0
+        "mob": 980,
+        "player": 2
       },
-      "deaths": 0,
-      "afkTime": 1972175,
-      "avgSessionLength": 173,
-      "lastSeen": "2025-07-17T21:29:15.973Z",
-      "joinDate": "2025-07-17T21:29:15.973Z"
-    },
-    {
-      "uuid": "972948e6-8c11-4381-94af-15432e6ba728",
-      "name": "Stupidvirgo",
-      "playtime": 74697532,
-      "sessions": 14,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 3236013,
-      "avgSessionLength": 89,
-      "lastSeen": "2025-07-17T21:58:56.221Z",
-      "joinDate": "2025-07-17T21:58:56.221Z"
-    },
-    {
-      "uuid": "ef78e3c2-2859-4b12-9478-23323df75d85",
-      "name": "Mattaroni",
-      "playtime": 48633808,
-      "sessions": 7,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 5055966,
-      "avgSessionLength": 116,
-      "lastSeen": "2025-07-18T02:16:22.829Z",
-      "joinDate": "2025-07-18T02:16:22.829Z"
-    },
-    {
-      "uuid": "8a2499a5-d07b-4788-afd4-555630148f28",
-      "name": "Kerebros",
-      "playtime": 54863686,
-      "sessions": 8,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 24304912,
-      "avgSessionLength": 114,
-      "lastSeen": "2025-07-17T21:31:29.635Z",
-      "joinDate": "2025-07-17T21:31:29.635Z"
-    },
-    {
-      "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
-      "name": "BroZGold",
-      "playtime": 96649631,
-      "sessions": 24,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 2231081,
-      "avgSessionLength": 67,
-      "lastSeen": "2025-07-18T00:15:11.606Z",
-      "joinDate": "2025-07-18T00:15:11.606Z"
-    },
-    {
-      "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
-      "name": "Pentatope",
-      "playtime": 63052474,
-      "sessions": 11,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
+      "deaths": 28,
       "afkTime": 0,
-      "avgSessionLength": 96,
-      "lastSeen": "2025-07-17T23:19:21.241Z",
-      "joinDate": "2025-07-17T23:19:21.241Z"
+      "avgSessionLength": 3,
+      "activityScore": 0,
+      "lastSeen": "2025-07-20T01:33:03.091Z",
+      "joinDate": "2025-06-06T01:33:03.091Z"
     },
     {
-      "uuid": "0c487333-338c-4068-b08c-d663ecea3486",
-      "name": "willisnothere",
-      "playtime": 64682466,
-      "sessions": 14,
+      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "Steve_Builder",
+      "playtime": 7200000,
+      "sessions": 45,
       "kills": {
-        "mob": 0,
-        "player": 0
+        "mob": 1250,
+        "player": 5
       },
-      "deaths": 0,
-      "afkTime": 29216117,
-      "avgSessionLength": 77,
-      "lastSeen": "2025-07-17T22:46:47.650Z",
-      "joinDate": "2025-07-17T22:46:47.650Z"
-    },
-    {
-      "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
-      "name": "McChickenribs",
-      "playtime": 86997670,
-      "sessions": 18,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
+      "deaths": 32,
       "afkTime": 0,
-      "avgSessionLength": 81,
-      "lastSeen": "2025-07-17T21:09:11.671Z",
-      "joinDate": "2025-07-17T21:09:11.671Z"
-    },
-    {
-      "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
-      "name": "EnderCube",
-      "playtime": 79035568,
-      "sessions": 18,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 3143612,
-      "avgSessionLength": 73,
-      "lastSeen": "2025-07-17T21:04:41.308Z",
-      "joinDate": "2025-07-17T21:04:41.308Z"
-    },
-    {
-      "uuid": "10bd2c53-d214-4b53-81df-8d883f95521a",
-      "name": "KingLettucePig",
-      "playtime": 8414929,
-      "sessions": 1,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "avgSessionLength": 140,
-      "lastSeen": "2025-07-21T03:26:09.819Z",
-      "joinDate": "2025-07-21T03:26:09.819Z"
-    },
-    {
-      "uuid": "818fbc02-aff0-4e37-9634-2df8825987e9",
-      "name": "DeliciousChili1",
-      "playtime": 44264805,
-      "sessions": 10,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 190840,
-      "avgSessionLength": 74,
-      "lastSeen": "2025-07-17T21:06:31.763Z",
-      "joinDate": "2025-07-17T21:06:31.763Z"
-    },
-    {
-      "uuid": "f8235ef5-a816-4b85-9c91-738d5ae3e4a7",
-      "name": "Pri5marine",
-      "playtime": 18503589,
-      "sessions": 6,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "avgSessionLength": 51,
-      "lastSeen": "2025-07-18T03:04:55.559Z",
-      "joinDate": "2025-07-18T03:04:55.559Z"
-    },
-    {
-      "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
-      "name": "CDBBoss",
-      "playtime": 52190683,
-      "sessions": 20,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 3555907,
-      "avgSessionLength": 43,
-      "lastSeen": "2025-07-17T21:20:52.127Z",
-      "joinDate": "2025-07-17T21:20:52.127Z"
-    },
-    {
-      "uuid": "65b52db0-eb88-4f77-b348-497ec5aebec5",
-      "name": "k1ngslayer2105",
-      "playtime": 31674399,
-      "sessions": 9,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "avgSessionLength": 59,
-      "lastSeen": "2025-07-18T15:34:15.407Z",
-      "joinDate": "2025-07-18T15:34:15.407Z"
-    },
-    {
-      "uuid": "4c35d54c-5333-4a10-9e2b-c2dcf1f622fb",
-      "name": "SamSword",
-      "playtime": 23604975,
-      "sessions": 8,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 563818,
-      "avgSessionLength": 49,
-      "lastSeen": "2025-07-18T02:04:49.403Z",
-      "joinDate": "2025-07-18T02:04:49.403Z"
+      "avgSessionLength": 3,
+      "activityScore": 0,
+      "lastSeen": "2025-07-21T01:33:03.091Z",
+      "joinDate": "2025-06-21T01:33:03.091Z"
     }
   ],
-  "mostDeaths": [],
-  "lastUpdated": "2025-07-21T22:43:18.579Z"
+  "mostDeaths": [
+    {
+      "uuid": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "Steve_Builder",
+      "playtime": 7200000,
+      "sessions": 45,
+      "kills": {
+        "mob": 1250,
+        "player": 5
+      },
+      "deaths": 32,
+      "afkTime": 0,
+      "avgSessionLength": 3,
+      "activityScore": 0,
+      "lastSeen": "2025-07-21T01:33:03.091Z",
+      "joinDate": "2025-06-21T01:33:03.091Z"
+    },
+    {
+      "uuid": "456e7890-e89b-12d3-a456-426614174001",
+      "name": "Alex_Miner",
+      "playtime": 6900000,
+      "sessions": 38,
+      "kills": {
+        "mob": 980,
+        "player": 2
+      },
+      "deaths": 28,
+      "afkTime": 0,
+      "avgSessionLength": 3,
+      "activityScore": 0,
+      "lastSeen": "2025-07-20T01:33:03.091Z",
+      "joinDate": "2025-06-06T01:33:03.091Z"
+    }
+  ],
+  "lastUpdated": "2025-07-21T23:12:05.034Z"
 }

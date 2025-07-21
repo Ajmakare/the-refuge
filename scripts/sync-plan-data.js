@@ -690,26 +690,28 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           p.registered as join_date,
           MAX(s.${columns.sessionEnd}) as last_seen,
           CAST(AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) / (60 * 1000) AS INTEGER) as avg_session_length_minutes,
-          -- Calculate activity score with logical weighting (SQLite compatible)
+          -- Calculate activity score with balanced weighting (SQLite compatible)
           CAST(
-            -- Recent activity (last 30 days) - 70% weight (most important)
+            -- Recent active time (last 14 days) - 40% weight
             COALESCE(SUM(
-              CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 2592000) * 1000
+              CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
                    THEN MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
                    ELSE 0 END
-            ), 0) * 0.7
-            -- Consistency bonus (days with sessions in last 30 days) - 20% weight
-            + (COUNT(DISTINCT 
-                CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 2592000) * 1000
-                     THEN date(s.${columns.sessionEnd}/1000, 'unixepoch') 
-                     ELSE NULL END
-              ) * 3600000 * 0.2)  -- 1 hour equivalent per active day
-            -- Total active time bonus (all-time engaged time) - 10% weight  
+            ), 0) * 0.4
+            -- Total active time (lifetime engagement) - 30% weight  
             + CASE 
                 WHEN (SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) > 0 
-                THEN (SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) * 0.1
+                THEN (SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) * 0.3
                 ELSE 0 
               END
+            -- Session frequency bonus (regular play) - 20% weight
+            + (COUNT(s.id) * 1800000 * 0.2)  -- 30 minutes equivalent per session
+            -- Recent consistency (active days in last 14 days) - 10% weight
+            + (COUNT(DISTINCT 
+                CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
+                     THEN date(s.${columns.sessionEnd}/1000, 'unixepoch') 
+                     ELSE NULL END
+              ) * 3600000 * 0.1)  -- 1 hour equivalent per active day
           AS INTEGER) as activity_score
         FROM ${tables.players} p
         LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
@@ -957,15 +959,15 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         COUNT(s.id) as total_sessions,
         MAX(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as longest_single_session,
         SUM(COALESCE(s.afk_time, 0)) as total_afk_time,
-        -- Calculate session dedication score (simpler but effective)
+        -- Calculate session dedication score (balanced approach)
         CAST(
-          -- Longest single session (shows peak dedication) - 60% weight
-          MAX(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.6
-          -- Average session length (shows consistency) - 30% weight  
-          + AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.3
-          -- Recent activity bonus (active in last 7 days) - 10% weight
-          + CASE WHEN MAX(s.${columns.sessionEnd}) > (strftime('%s', 'now') - 604800) * 1000
-                 THEN AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.1
+          -- Longest single session (peak dedication) - 50% weight
+          MAX(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.5
+          -- Average session length (consistency matters) - 35% weight  
+          + AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.35
+          -- Recent activity bonus (active in last 14 days) - 15% weight
+          + CASE WHEN MAX(s.${columns.sessionEnd}) > (strftime('%s', 'now') - 1209600) * 1000
+                 THEN AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.15
                  ELSE 0 END
         AS INTEGER) as dedication_score
       FROM ${tables.players} p
@@ -1001,45 +1003,156 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
     checkComplete();
   }
 
-  // Query 4: Most Deaths
-  if (tables.players && tables.deaths) {
-    const deathsQuery = `
-      SELECT 
-        p.uuid, p.name, p.registered as join_date,
-        COALESCE(d.deaths, 0) as total_deaths
-      FROM ${tables.players} p
-      LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid
-      WHERE COALESCE(d.deaths, 0) > 0
-      ORDER BY total_deaths DESC
-      LIMIT ?
-    `;
+  // Query 4: Most Deaths - Extract from sessions table if available
+  if (tables.players) {
+    if (tables.deaths) {
+      // Use dedicated deaths table if available
+      const deathsQuery = `
+        SELECT 
+          p.uuid, p.name, p.registered as join_date,
+          COALESCE(d.deaths, 0) as total_deaths
+        FROM ${tables.players} p
+        LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid
+        WHERE COALESCE(d.deaths, 0) > 0
+        ORDER BY total_deaths DESC
+        LIMIT ?
+      `;
 
-    db.all(deathsQuery, [CONFIG.limits.mostDeaths], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying most deaths:', err.message);
-      } else {
-        console.log(`🔍 Most Deaths query returned ${rows.length} rows`);
-        leaderboardData.mostDeaths = rows.map(row => ({
-          uuid: row.uuid,
-          name: row.name,
-          playtime: 0,
-          sessions: 0,
-          kills: { mob: 0, player: 0 },
-          deaths: row.total_deaths || 0,
-          afkTime: 0,
-          daysActive: 0,
-          lastSeen: new Date(row.join_date).toISOString(),
-          joinDate: new Date(row.join_date).toISOString()
-        }));
-      }
+      db.all(deathsQuery, [CONFIG.limits.mostDeaths], (err, rows) => {
+        if (err) {
+          console.error('❌ Error querying most deaths from deaths table:', err.message);
+        } else {
+          console.log(`🔍 Most Deaths query returned ${rows.length} rows`);
+          leaderboardData.mostDeaths = rows.map(row => ({
+            uuid: row.uuid,
+            name: row.name,
+            playtime: 0,
+            sessions: 0,
+            kills: { mob: 0, player: 0 },
+            deaths: row.total_deaths || 0,
+            afkTime: 0,
+            daysActive: 0,
+            lastSeen: new Date(row.join_date).toISOString(),
+            joinDate: new Date(row.join_date).toISOString()
+          }));
+        }
+        checkComplete();
+      });
+    } else if (tables.sessions && columns.userId) {
+      // Extract deaths from sessions table (Legacy PLAN v4)
+      console.log('📊 Aggregating death data from session records...');
+      const sessionDeathsQuery = `
+        SELECT 
+          p.uuid,
+          p.name,
+          p.registered as join_date,
+          SUM(COALESCE(s.deaths, 0)) as total_deaths,
+          MAX(s.${columns.sessionEnd}) as last_seen
+        FROM ${tables.players} p
+        LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+        GROUP BY p.uuid, p.name, p.registered
+        HAVING total_deaths > 0
+        ORDER BY total_deaths DESC
+        LIMIT ?
+      `;
+
+      db.all(sessionDeathsQuery, [CONFIG.limits.mostDeaths], (err, rows) => {
+        if (err) {
+          console.error('❌ Error querying deaths from sessions:', err.message);
+        } else {
+          console.log(`🔍 Session Deaths query returned ${rows.length} rows`);
+          leaderboardData.mostDeaths = rows.map(row => ({
+            uuid: row.uuid,
+            name: row.name,
+            playtime: 0,
+            sessions: 0,
+            kills: { mob: 0, player: 0 },
+            deaths: row.total_deaths || 0,
+            afkTime: 0,
+            daysActive: 0,
+            lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
+            joinDate: new Date(row.join_date).toISOString()
+          }));
+        }
+        checkComplete();
+      });
+    } else {
+      console.log('⚠️  Skipping Most Deaths query - no deaths data available');
       checkComplete();
-    });
+    }
   } else {
     console.log('⚠️  Skipping Most Deaths query - missing required tables');
     checkComplete();
   }
 
   // Builders leaderboard removed - block data not available in this PLAN setup
+}
+
+/**
+ * Merge and normalize player data across all leaderboards for consistency
+ */
+function mergePlayerData(leaderboardData) {
+  console.log('🔄 Merging player data across leaderboards for consistency...');
+  
+  // Create a comprehensive player data map
+  const playerMap = new Map();
+  
+  // Helper function to merge player data intelligently
+  function mergePlayer(existing, newData) {
+    return {
+      uuid: existing.uuid || newData.uuid,
+      name: existing.name || newData.name,
+      // Use the highest values for cumulative stats
+      playtime: Math.max(existing.playtime || 0, newData.playtime || 0),
+      sessions: Math.max(existing.sessions || 0, newData.sessions || 0),
+      kills: {
+        mob: Math.max(existing.kills?.mob || 0, newData.kills?.mob || 0),
+        player: Math.max(existing.kills?.player || 0, newData.kills?.player || 0)
+      },
+      deaths: Math.max(existing.deaths || 0, newData.deaths || 0),
+      afkTime: Math.max(existing.afkTime || 0, newData.afkTime || 0),
+      // Keep specialized fields where relevant
+      avgSessionLength: existing.avgSessionLength || newData.avgSessionLength || 0,
+      activityScore: existing.activityScore || newData.activityScore || 0,
+      // Use the most recent timestamp
+      lastSeen: (existing.lastSeen && new Date(existing.lastSeen) > new Date(newData.lastSeen || 0)) 
+                 ? existing.lastSeen : (newData.lastSeen || existing.lastSeen),
+      joinDate: (existing.joinDate && new Date(existing.joinDate) < new Date(newData.joinDate || Date.now())) 
+                 ? existing.joinDate : (newData.joinDate || existing.joinDate)
+    };
+  }
+  
+  // Collect all unique players from all leaderboards
+  const allLeaderboards = [
+    ...leaderboardData.mostActive,
+    ...leaderboardData.topKillers, 
+    ...leaderboardData.longestSessions,
+    ...leaderboardData.mostDeaths
+  ];
+  
+  // Build comprehensive player map
+  allLeaderboards.forEach(player => {
+    if (playerMap.has(player.uuid)) {
+      playerMap.set(player.uuid, mergePlayer(playerMap.get(player.uuid), player));
+    } else {
+      playerMap.set(player.uuid, { ...player });
+    }
+  });
+  
+  // Update each leaderboard with complete player data while preserving ranking
+  leaderboardData.mostActive = leaderboardData.mostActive.map(player => 
+    ({ ...playerMap.get(player.uuid), activityScore: player.activityScore }));
+  
+  leaderboardData.topKillers = leaderboardData.topKillers.map(player => 
+    playerMap.get(player.uuid));
+    
+  leaderboardData.longestSessions = leaderboardData.longestSessions.map(player => 
+    ({ ...playerMap.get(player.uuid), avgSessionLength: player.avgSessionLength }));
+    
+  leaderboardData.mostDeaths = leaderboardData.mostDeaths.map(player => 
+    playerMap.get(player.uuid));
+  
+  console.log(`✅ Merged data for ${playerMap.size} unique players across all leaderboards`);
 }
 
 /**
@@ -1053,6 +1166,10 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
     completed++;
     if (completed === queries) {
       db.close();
+      
+      // Merge player data for consistency across leaderboards
+      mergePlayerData(leaderboardData);
+      
       console.log('📊 Final leaderboard summary:');
       console.log(`   - Most Active: ${leaderboardData.mostActive.length} players`);
       console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
@@ -1072,26 +1189,6 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
   });
 }
 
-/**
- * Format player row data consistently
- */
-function formatPlayerRow(row) {
-  return {
-    uuid: row.uuid,
-    name: row.name,
-    playtime: row.playtime || 0,
-    sessions: row.sessions || 0,
-    kills: {
-      mob: row.mob_kills || 0,
-      player: row.player_kills || 0
-    },
-    deaths: row.deaths || 0,
-    afkTime: 0,
-    daysActive: 0,
-    lastSeen: row.last_seen ? new Date(row.last_seen).toISOString() : new Date().toISOString(),
-    joinDate: row.join_date ? new Date(row.join_date).toISOString() : new Date().toISOString()
-  };
-}
 
 /**
  * Extract player statistics from PLAN SQLite database
