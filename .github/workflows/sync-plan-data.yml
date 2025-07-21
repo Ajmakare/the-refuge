@@ -86,7 +86,6 @@ jobs:
           console.log('  - Most Active:', data.mostActive.length, 'players');
           console.log('  - Top Killers:', data.topKillers.length, 'players');
           console.log('  - Longest Sessions:', data.longestSessions.length, 'players');
-          console.log('  - Top Builders:', data.topBuilders.length, 'players');
           console.log('  - Last Updated:', data.lastUpdated);
         "
     
