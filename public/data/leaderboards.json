@@ -3,33 +3,33 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 94732567,
-      "sessions": 23,
+      "playtime": 96649631,
+      "sessions": 24,
       "kills": {
-        "mob": 184,
+        "mob": 195,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 2231081,
-      "avgSessionLength": 68,
-      "activityScore": 76881188,
-      "lastSeen": "2025-07-21T20:23:56.897Z",
+      "avgSessionLength": 67,
+      "activityScore": 78414840,
+      "lastSeen": "2025-07-21T21:25:40.450Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
     },
     {
       "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
       "name": "McChickenribs",
-      "playtime": 83945893,
-      "sessions": 17,
+      "playtime": 86997670,
+      "sessions": 18,
       "kills": {
-        "mob": 862,
+        "mob": 865,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 82,
-      "activityScore": 70036714,
-      "lastSeen": "2025-07-21T20:22:14.845Z",
+      "avgSessionLength": 80,
+      "activityScore": 72478136,
+      "lastSeen": "2025-07-21T21:15:33.595Z",
       "joinDate": "2025-07-17T21:09:11.671Z"
     },
     {
@@ -163,8 +163,8 @@
     {
       "uuid": "f42e00c8-774e-464d-a543-af11993b2983",
       "name": "Kage45",
-      "playtime": 34456676,
-      "sessions": 23,
+      "playtime": 34723857,
+      "sessions": 24,
       "kills": {
         "mob": 218,
         "player": 0
@@ -172,8 +172,8 @@
       "deaths": 0,
       "afkTime": 0,
       "avgSessionLength": 24,
-      "activityScore": 30445340,
-      "lastSeen": "2025-07-21T19:05:22.890Z",
+      "activityScore": 30659085,
+      "lastSeen": "2025-07-21T21:39:52.898Z",
       "joinDate": "2025-07-17T22:03:11.334Z"
     },
     {
@@ -323,7 +323,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 862,
+        "mob": 865,
         "player": 0
       },
       "deaths": 0,
@@ -532,15 +532,15 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 94732567,
-      "sessions": 23,
+      "playtime": 96649631,
+      "sessions": 24,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 2231081,
-      "avgSessionLength": 69,
+      "avgSessionLength": 67,
       "lastSeen": "2025-07-18T00:15:11.606Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
     },
@@ -577,15 +577,15 @@
     {
       "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
       "name": "McChickenribs",
-      "playtime": 83945893,
-      "sessions": 17,
+      "playtime": 86997670,
+      "sessions": 18,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 82,
+      "avgSessionLength": 81,
       "lastSeen": "2025-07-17T21:09:11.671Z",
       "joinDate": "2025-07-17T21:09:11.671Z"
     },
@@ -696,5 +696,5 @@
     }
   ],
   "mostDeaths": [],
-  "lastUpdated": "2025-07-21T21:39:41.272Z"
+  "lastUpdated": "2025-07-21T22:12:24.719Z"
 }
