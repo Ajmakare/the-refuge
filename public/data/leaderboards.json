@@ -3,8 +3,8 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 88784094,
-      "sessions": 21,
+      "playtime": 92507795,
+      "sessions": 22,
       "kills": {
         "mob": 0,
         "player": 0
@@ -12,14 +12,14 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-21T06:00:10.645Z",
+      "lastSeen": "2025-07-21T07:07:13.211Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
     },
     {
       "uuid": "972948e6-8c11-4381-94af-15432e6ba728",
       "name": "Stupidvirgo",
-      "playtime": 74400397,
-      "sessions": 13,
+      "playtime": 74697532,
+      "sessions": 14,
       "kills": {
         "mob": 0,
         "player": 0
@@ -27,7 +27,7 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-21T06:00:10.693Z",
+      "lastSeen": "2025-07-21T06:05:44.462Z",
       "joinDate": "2025-07-17T21:58:56.221Z"
     },
     {
@@ -290,5 +290,5 @@
   ],
   "longestSessions": [],
   "topBuilders": [],
-  "lastUpdated": "2025-07-21T06:52:54.100Z"
+  "lastUpdated": "2025-07-21T07:19:55.395Z"
 }
