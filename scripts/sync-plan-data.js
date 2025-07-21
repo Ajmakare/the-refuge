@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const dns = require('dns');
 
 // Configuration
 const CONFIG = {
@@ -14,7 +15,7 @@ const CONFIG = {
     host: process.env.GGSERVERS_HOST || 'your-server.ggservers.com',
     username: process.env.GGSERVERS_USERNAME || 'your-username',
     password: process.env.GGSERVERS_PASSWORD || 'your-password',
-    port: process.env.GGSERVERS_PORT || 21, // or 22 for SFTP
+    port: parseInt(process.env.GGSERVERS_PORT || '21'), // Ensure it's a number
   },
   
   // Paths - GGServers typically uses /plugins/Plan/ for the PLAN plugin
@@ -60,11 +61,105 @@ async function downloadSqliteFile() {
     return;
   }
   
+  // Validate hostname format
+  console.log('🔍 Validating connection settings...');
+  console.log(`📡 Host: ${CONFIG.server.host}`);
+  console.log(`🔌 Port: ${CONFIG.server.port} (${typeof CONFIG.server.port})`);
+  console.log(`👤 User: ${CONFIG.server.username}`);
+  
+  if (!CONFIG.server.host || CONFIG.server.host === 'your-server.ggservers.com') {
+    throw new Error('❌ GGSERVERS_HOST not configured. Please set your actual GGServers hostname.');
+  }
+  
+  if (!CONFIG.server.username || CONFIG.server.username === 'your-username') {
+    throw new Error('❌ GGSERVERS_USERNAME not configured. Please set your FTP username.');
+  }
+  
+  if (!CONFIG.server.password || CONFIG.server.password === 'your-password') {
+    throw new Error('❌ GGSERVERS_PASSWORD not configured. Please set your FTP password.');
+  }
+  
+  // Clean up hostname (remove protocol if present)
+  let cleanHost = CONFIG.server.host.replace(/^sftp?:\/\//, '').replace(/^https?:\/\//, '').trim();
+  
+  // Handle GGServers specific formats like d757.ggn.io:2022
+  if (cleanHost.includes(':')) {
+    const [host, portFromHost] = cleanHost.split(':');
+    cleanHost = host;
+    if (!CONFIG.server.port || CONFIG.server.port === 21) {
+      CONFIG.server.port = parseInt(portFromHost);
+      console.log(`🔧 Extracted port from hostname: ${CONFIG.server.port}`);
+    }
+  }
+  
+  CONFIG.server.host = cleanHost;
+  console.log(`🔧 Cleaned hostname: ${cleanHost}`);
+  
+  // Test DNS resolution first
+  console.log('🌐 Testing DNS resolution...');
+  try {
+    await new Promise((resolve, reject) => {
+      dns.resolve4(CONFIG.server.host, (err, addresses) => {
+        if (err) {
+          reject(new Error(`DNS resolution failed for ${CONFIG.server.host}: ${err.message}`));
+        } else {
+          console.log(`✅ DNS resolved to: ${addresses[0]}`);
+          resolve(addresses);
+        }
+      });
+    });
+  } catch (dnsError) {
+    console.log(`❌ ${dnsError.message}`);
+    
+    // Try common GGServers patterns
+    const alternatives = [
+      CONFIG.server.host.replace('.ggservers.com', '') + '.ggservers.com',
+      CONFIG.server.host + '.ggservers.com',
+      CONFIG.server.host.replace('.ggn.io', '') + '.ggn.io',
+      CONFIG.server.host + '.ggn.io',
+      'mc-' + CONFIG.server.host.replace(/^mc-/, '').replace('.ggservers.com', '') + '.ggservers.com'
+    ];
+    
+    console.log('🔍 Trying alternative hostnames...');
+    let foundAlternative = false;
+    
+    for (const alt of alternatives) {
+      if (alt === CONFIG.server.host) continue;
+      
+      try {
+        await new Promise((resolve, reject) => {
+          dns.resolve4(alt, (err, addresses) => {
+            if (err) reject(err);
+            else resolve(addresses);
+          });
+        });
+        console.log(`✅ Found working hostname: ${alt}`);
+        CONFIG.server.host = alt;
+        foundAlternative = true;
+        break;
+      } catch (e) {
+        console.log(`❌ ${alt} also failed`);
+      }
+    }
+    
+    if (!foundAlternative) {
+      throw new Error(`❌ Cannot resolve hostname. Please check:
+1. Hostname spelling: ${CONFIG.server.host}
+2. GGServers server status
+3. Network connectivity
+
+Common GGServers hostname formats:
+- yourserver.ggservers.com
+- mc-123.ggservers.com
+- subdomain.ggservers.com`);
+    }
+  }
+  
   // Try SFTP first (more secure), then fall back to FTP
   let downloadSuccess = false;
   
-  // Option 1: Try SFTP download
-  if (CONFIG.server.port === 22 || CONFIG.server.port === '22') {
+  // Option 1: Try SFTP download (for ports 22, 2022, or any non-21 port)
+  if (CONFIG.server.port === 22 || CONFIG.server.port === 2022 || CONFIG.server.port !== 21) {
     try {
       console.log('🔒 Attempting SFTP download...');
       const Client = require('ssh2-sftp-client');

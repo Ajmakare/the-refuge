@@ -21,7 +21,7 @@ First, gather your GGServers FTP credentials:
 1. **Log into your GGServers control panel**
 2. **Find the FTP access section** (usually under "File Manager" or "FTP")
 3. **Note down these details:**
-   - Hostname (e.g., `yourserver.ggservers.com`)
+   - Hostname (e.g., `d757.ggn.io` or `yourserver.ggservers.com`)
    - FTP Username
    - FTP Password
    - Port (usually 21 for FTP, 22 for SFTP)
