@@ -3,17 +3,17 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 96649631,
-      "sessions": 24,
+      "playtime": 100827489,
+      "sessions": 25,
       "kills": {
-        "mob": 195,
+        "mob": 196,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 2231081,
       "avgSessionLength": 67,
-      "activityScore": 78414840,
-      "lastSeen": "2025-07-21T21:25:40.450Z",
+      "activityScore": 81757126,
+      "lastSeen": "2025-07-21T22:55:05.104Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
     },
     {
@@ -99,17 +99,17 @@
     {
       "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
       "name": "CDBBoss",
-      "playtime": 52190683,
-      "sessions": 20,
+      "playtime": 57210996,
+      "sessions": 21,
       "kills": {
-        "mob": 3736,
+        "mob": 3798,
         "player": 0
       },
       "deaths": 0,
-      "afkTime": 3555907,
-      "avgSessionLength": 43,
-      "activityScore": 41787820,
-      "lastSeen": "2025-07-21T18:45:17.403Z",
+      "afkTime": 4015114,
+      "avgSessionLength": 45,
+      "activityScore": 45436705,
+      "lastSeen": "2025-07-21T22:46:59.294Z",
       "joinDate": "2025-07-17T21:20:52.127Z"
     },
     {
@@ -163,33 +163,33 @@
     {
       "uuid": "f42e00c8-774e-464d-a543-af11993b2983",
       "name": "Kage45",
-      "playtime": 36804381,
-      "sessions": 29,
+      "playtime": 37535083,
+      "sessions": 33,
       "kills": {
-        "mob": 229,
+        "mob": 232,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 21,
-      "activityScore": 32323504,
-      "lastSeen": "2025-07-21T22:20:02.445Z",
+      "avgSessionLength": 18,
+      "activityScore": 32908066,
+      "lastSeen": "2025-07-21T22:33:44.147Z",
       "joinDate": "2025-07-17T22:03:11.334Z"
     },
     {
       "uuid": "0c487333-338c-4068-b08c-d663ecea3486",
       "name": "willisnothere",
-      "playtime": 64682466,
-      "sessions": 14,
+      "playtime": 65861721,
+      "sessions": 17,
       "kills": {
         "mob": 334,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 29216117,
-      "avgSessionLength": 77,
-      "activityScore": 29813079,
-      "lastSeen": "2025-07-21T22:12:32.962Z",
+      "avgSessionLength": 64,
+      "activityScore": 30756483,
+      "lastSeen": "2025-07-21T22:44:25.050Z",
       "joinDate": "2025-07-17T22:46:47.650Z"
     },
     {
@@ -248,7 +248,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 3736,
+        "mob": 3798,
         "player": 1
       },
       "deaths": 0,
@@ -443,7 +443,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 229,
+        "mob": 232,
         "player": 2
       },
       "deaths": 0,
@@ -532,8 +532,8 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 96649631,
-      "sessions": 24,
+      "playtime": 100827489,
+      "sessions": 25,
       "kills": {
         "mob": 0,
         "player": 0
@@ -562,15 +562,15 @@
     {
       "uuid": "0c487333-338c-4068-b08c-d663ecea3486",
       "name": "willisnothere",
-      "playtime": 64682466,
-      "sessions": 14,
+      "playtime": 65861721,
+      "sessions": 17,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 29216117,
-      "avgSessionLength": 77,
+      "avgSessionLength": 65,
       "lastSeen": "2025-07-17T22:46:47.650Z",
       "joinDate": "2025-07-17T22:46:47.650Z"
     },
@@ -652,15 +652,15 @@
     {
       "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
       "name": "CDBBoss",
-      "playtime": 52190683,
-      "sessions": 20,
+      "playtime": 57210996,
+      "sessions": 21,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
-      "afkTime": 3555907,
-      "avgSessionLength": 43,
+      "afkTime": 4015114,
+      "avgSessionLength": 45,
       "lastSeen": "2025-07-17T21:20:52.127Z",
       "joinDate": "2025-07-17T21:20:52.127Z"
     },
@@ -696,5 +696,5 @@
     }
   ],
   "mostDeaths": [],
-  "lastUpdated": "2025-07-21T22:43:18.579Z"
+  "lastUpdated": "2025-07-21T23:11:46.467Z"
 }
