@@ -3,8 +3,8 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 75996474,
-      "sessions": 19,
+      "playtime": 77971714,
+      "sessions": 20,
       "kills": {
         "mob": 0,
         "player": 0
@@ -12,14 +12,14 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-21T02:21:14.304Z",
+      "lastSeen": "2025-07-21T02:56:54.021Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
     },
     {
       "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
       "name": "EnderCube",
-      "playtime": 60510481,
-      "sessions": 13,
+      "playtime": 64182765,
+      "sessions": 14,
       "kills": {
         "mob": 0,
         "player": 0
@@ -27,14 +27,14 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-20T23:50:28.818Z",
+      "lastSeen": "2025-07-21T03:01:12.113Z",
       "joinDate": "2025-07-17T21:04:41.308Z"
     },
     {
       "uuid": "1bd7d04a-ebb3-4ee7-b687-c87b48db9071",
       "name": "OgLmx",
-      "playtime": 58190112,
-      "sessions": 19,
+      "playtime": 59527705,
+      "sessions": 20,
       "kills": {
         "mob": 0,
         "player": 0
@@ -42,7 +42,7 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-21T02:19:34.014Z",
+      "lastSeen": "2025-07-21T03:16:36.465Z",
       "joinDate": "2025-07-17T21:04:24.557Z"
     },
     {
@@ -106,6 +106,21 @@
       "joinDate": "2025-07-17T23:19:21.241Z"
     },
     {
+      "uuid": "818fbc02-aff0-4e37-9634-2df8825987e9",
+      "name": "DeliciousChili1",
+      "playtime": 44264805,
+      "sessions": 10,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-21T03:34:19.670Z",
+      "joinDate": "2025-07-17T21:06:31.763Z"
+    },
+    {
       "uuid": "e1268111-5227-4862-9fca-9c8d7a029282",
       "name": "Hefaest0s",
       "playtime": 41455316,
@@ -121,10 +136,10 @@
       "joinDate": "2025-07-17T21:29:15.973Z"
     },
     {
-      "uuid": "818fbc02-aff0-4e37-9634-2df8825987e9",
-      "name": "DeliciousChili1",
-      "playtime": 40487753,
-      "sessions": 9,
+      "uuid": "ef78e3c2-2859-4b12-9478-23323df75d85",
+      "name": "Mattaroni",
+      "playtime": 38343355,
+      "sessions": 5,
       "kills": {
         "mob": 0,
         "player": 0
@@ -132,23 +147,8 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-21T02:27:04.314Z",
-      "joinDate": "2025-07-17T21:06:31.763Z"
-    },
-    {
-      "uuid": "0a5e76cc-d1a3-4b63-9551-801739eb672f",
-      "name": "Lord_Unicronus",
-      "playtime": 32934001,
-      "sessions": 19,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "blocksPlaced": 0,
-      "blocksBroken": 0,
-      "lastSeen": "2025-07-20T18:04:04.372Z",
-      "joinDate": "2025-07-17T21:10:41.270Z"
+      "lastSeen": "2025-07-21T02:57:10.116Z",
+      "joinDate": "2025-07-18T02:16:22.829Z"
     }
   ],
   "topKillers": [
@@ -245,5 +245,5 @@
   ],
   "longestSessions": [],
   "topBuilders": [],
-  "lastUpdated": "2025-07-21T03:00:17.234Z"
+  "lastUpdated": "2025-07-21T04:06:02.113Z"
 }
