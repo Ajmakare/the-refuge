@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star, Target, Building } from "lucide-react";
+import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star, Target } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
@@ -8,7 +8,7 @@ import { formatPlaytime, formatNumber, formatDate } from "@/lib/utils";
 
 export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
-  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'sessions' | 'builders' | 'deaths'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'sessions' | 'deaths'>('active');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -96,10 +96,18 @@ export default function Leaderboards() {
           .filter(killer => (killer.kills.mob + killer.kills.player) > 0)
           .map(killer => {
             const activePlayer = activePlayersMap.get(killer.uuid);
-            return activePlayer ? {
-              ...activePlayer,
-              kills: killer.kills // Use kill data from topKillers
-            } : killer;
+            if (activePlayer) {
+              // Merge the data, prioritizing the killer's kill stats
+              return {
+                ...activePlayer,
+                kills: killer.kills, // Use kill data from topKillers
+                lastSeen: activePlayer.lastSeen || killer.lastSeen,
+                playtime: activePlayer.playtime || 0,
+                sessions: activePlayer.sessions || 0,
+                deaths: activePlayer.deaths || killer.deaths
+              };
+            }
+            return killer;
           })
           .sort((a, b) => (b.kills.mob + b.kills.player) - (a.kills.mob + a.kills.player));
         break;
@@ -108,14 +116,27 @@ export default function Leaderboards() {
         result = data.longestSessions.length > 0 ? data.longestSessions :
           data.mostActive.filter(p => p.sessions > 0).sort((a, b) => b.sessions - a.sessions);
         break;
-      case 'builders': 
-        // For builders, use top builders if available, otherwise filter active players
-        result = data.topBuilders.length > 0 ? data.topBuilders :
-          data.mostActive.filter(p => p.blocksPlaced > 0).sort((a, b) => b.blocksPlaced - a.blocksPlaced);
-        break;
       case 'deaths':
-        // Most deaths leaderboard
-        result = data.mostDeaths.length > 0 ? data.mostDeaths :
+        // Merge deaths data with active player data to get complete stats
+        result = data.mostDeaths.length > 0 ? 
+          data.mostDeaths
+            .filter(deathPlayer => deathPlayer.deaths > 0)
+            .map(deathPlayer => {
+              const activePlayer = activePlayersMap.get(deathPlayer.uuid);
+              if (activePlayer) {
+                // Merge the data, prioritizing the death player's death stats
+                return {
+                  ...activePlayer,
+                  deaths: deathPlayer.deaths, // Use death data from mostDeaths
+                  lastSeen: activePlayer.lastSeen || deathPlayer.lastSeen,
+                  playtime: activePlayer.playtime || 0,
+                  sessions: activePlayer.sessions || deathPlayer.sessions,
+                  kills: activePlayer.kills || deathPlayer.kills
+                };
+              }
+              return deathPlayer;
+            })
+            .sort((a, b) => b.deaths - a.deaths) :
           data.mostActive.filter(p => p.deaths > 0).sort((a, b) => b.deaths - a.deaths);
         break;
       default: 
@@ -144,12 +165,6 @@ export default function Leaderboards() {
           icon: <Target style={{ width: "20px", height: "20px" }} />, 
           title: 'Longest Sessions',
           description: 'Players with the most dedicated gaming sessions'
-        };
-      case 'builders': 
-        return { 
-          icon: <Building style={{ width: "20px", height: "20px" }} />, 
-          title: 'Top Builders',
-          description: 'Players who have placed the most blocks'
         };
       case 'deaths':
         return {
@@ -197,11 +212,6 @@ export default function Leaderboards() {
           return { 
             value: player.sessions > 0 ? player.sessions.toString() : 'Starting', 
             label: player.sessions > 0 ? 'Sessions' : 'Building History' 
-          };
-        case 'builders': 
-          return { 
-            value: player.blocksPlaced > 0 ? formatNumber(player.blocksPlaced) : 'Starting', 
-            label: player.blocksPlaced > 0 ? 'Blocks Placed' : 'Ready to Build' 
           };
         case 'deaths':
           return {
@@ -556,7 +566,6 @@ export default function Leaderboards() {
                 { key: 'active' as const, label: 'Most Active' },
                 { key: 'killers' as const, label: 'Top Combat' },
                 { key: 'sessions' as const, label: 'Sessions' },
-                { key: 'builders' as const, label: 'Builders' },
                 { key: 'deaths' as const, label: 'Most Deaths' },
               ].map(tab => {
                 const config = getTabConfig(tab.key);
@@ -715,19 +724,6 @@ export default function Leaderboards() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
-                      Top Builder:
-                    </span>
-                    <span style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '700', 
-                      color: 'var(--accent)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {data && data.topBuilders[0] ? data.topBuilders[0].name : 'No data yet'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
                       Last Updated:
                     </span>
                     <span style={{ 
@@ -738,33 +734,6 @@ export default function Leaderboards() {
                     }}>
                       {data ? new Date(data.lastUpdated).toLocaleTimeString() : '--:--'}
                     </span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Achievement Legend */}
-              <div className="minecraft-card slide-left" style={{ padding: '24px' }}>
-                <h4 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: '700', 
-                  marginBottom: '16px',
-                  color: 'white',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Rank Legend
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Crown style={{ width: "20px", height: "20px", color: "#FFD700" }} />
-                    <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>1st Place</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Star style={{ width: "20px", height: "20px", color: "#C0C0C0" }} />
-                    <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>2nd Place</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Trophy style={{ width: "20px", height: "20px", color: "#CD7F32" }} />
-                    <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>3rd Place</span>
                   </div>
                 </div>
               </div>

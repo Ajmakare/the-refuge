@@ -28,7 +28,6 @@ const CONFIG = {
     mostActive: 15,
     topKillers: 15,
     longestSessions: 15,
-    topBuilders: 15,
     mostDeaths: 15,
   }
 };
@@ -821,28 +820,29 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         checkComplete();
       });
     } else if (columns.killerUuid) {
-      // Aggregate individual kill records (for your database structure)
-      console.log('📊 Aggregating kill data from individual kill records...');
+      // Merge PvP kills with mob kills from sessions for Top Combat leaderboard
+      console.log('📊 Aggregating kill data from individual kill records AND session mob kills...');
       
-      const aggregatedKillsQuery = `
+      const combinedKillsQuery = `
         SELECT 
           p.uuid, p.name, p.registered as join_date,
-          COUNT(k.id) as total_kills,
-          0 as mob_kills,
-          COUNT(CASE WHEN k.${columns.victimUuid} != k.${columns.killerUuid} THEN 1 END) as player_kills
+          COALESCE(SUM(s.mob_kills), 0) as mob_kills,
+          COUNT(k.id) as player_kills,
+          (COALESCE(SUM(s.mob_kills), 0) + COUNT(k.id)) as total_kills
         FROM ${tables.players} p
+        LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
         LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
         GROUP BY p.uuid, p.name, p.registered
-        HAVING COUNT(k.id) > 0
+        HAVING total_kills > 0
         ORDER BY total_kills DESC
         LIMIT ?
       `;
 
-      db.all(aggregatedKillsQuery, [CONFIG.limits.topKillers], (err, rows) => {
+      db.all(combinedKillsQuery, [CONFIG.limits.topKillers], (err, rows) => {
         if (err) {
-          console.error('❌ Error querying aggregated kills:', err.message);
+          console.error('❌ Error querying combined kills:', err.message);
         } else {
-          console.log(`🔍 Aggregated kills query returned ${rows.length} rows`);
+          console.log(`🔍 Combined kills query returned ${rows.length} rows`);
           leaderboardData.topKillers = rows.map(row => ({
             uuid: row.uuid,
             name: row.name,
@@ -950,60 +950,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
     checkComplete();
   }
 
-  // Query 5: Top Builders - Check PLAN extensions for block data
-  console.log('🔍 Looking for block placement data in PLAN extensions...');
-  
-  // Try to find block-related data in the extension system
-  const extensionQuery = `
-    SELECT 
-      u.uuid, u.name, u.registered as join_date,
-      COALESCE(
-        SUM(CASE WHEN p.string_value LIKE '%blocks%' OR p.string_value LIKE '%placed%' 
-                  THEN CAST(p.long_value AS INTEGER) ELSE 0 END), 0
-      ) as blocks_placed
-    FROM plan_users u
-    LEFT JOIN plan_extension_user_values p ON u.uuid = p.uuid
-    LEFT JOIN plan_extension_providers pr ON p.provider_id = pr.id
-    WHERE pr.name LIKE '%block%' OR pr.name LIKE '%place%' OR pr.text LIKE '%block%'
-    GROUP BY u.uuid, u.name, u.registered
-    HAVING blocks_placed > 0
-    ORDER BY blocks_placed DESC
-    LIMIT ?
-  `;
-
-  db.all(extensionQuery, [CONFIG.limits.topBuilders], (err, rows) => {
-    if (err || !rows || rows.length === 0) {
-      console.log('⚠️  No block placement data found in extensions, trying alternative approach...');
-      
-      // Alternative: Check if there's any action data or similar
-      const alternativeQuery = `
-        SELECT u.uuid, u.name, u.registered as join_date, 0 as blocks_placed
-        FROM plan_users u 
-        LIMIT 0
-      `;
-      
-      db.all(alternativeQuery, [], (err2, rows2) => {
-        leaderboardData.topBuilders = [];
-        console.log('⚠️  Skipping Top Builders query - no block data available');
-        checkComplete();
-      });
-    } else {
-      console.log(`🔍 Top Builders query returned ${rows.length} rows`);
-      leaderboardData.topBuilders = rows.map(row => ({
-        uuid: row.uuid,
-        name: row.name,
-        playtime: 0,
-        sessions: 0,
-        kills: { mob: 0, player: 0 },
-        deaths: 0,
-        blocksPlaced: row.blocks_placed || 0,
-        blocksBroken: 0,
-        lastSeen: new Date(row.join_date).toISOString(),
-        joinDate: new Date(row.join_date).toISOString()
-      }));
-      checkComplete();
-    }
-  });
+  // Builders leaderboard removed - block data not available in this PLAN setup
 }
 
 /**
@@ -1011,7 +958,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
  */
 function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
   let completed = 0;
-  const queries = 5; // Reduced to 5 queries
+  const queries = 4; // Reduced to 4 queries (removed builders)
 
   function checkComplete() {
     completed++;
@@ -1021,7 +968,6 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
       console.log(`   - Most Active: ${leaderboardData.mostActive.length} players`);
       console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
       console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
-      console.log(`   - Top Builders: ${leaderboardData.topBuilders.length} players`);
       console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
       resolve(leaderboardData);
     }
@@ -1087,7 +1033,6 @@ async function extractPlayerStats() {
       mostActive: [],
       topKillers: [],
       longestSessions: [],
-      topBuilders: [],
       mostDeaths: [],
       lastUpdated: new Date().toISOString()
     };
@@ -1158,7 +1103,6 @@ async function main() {
     console.log(`   - Most Active: ${leaderboardData.mostActive.length} players`);
     console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
     console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
-    console.log(`   - Top Builders: ${leaderboardData.topBuilders.length} players`);
     console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
     
   } catch (error) {
