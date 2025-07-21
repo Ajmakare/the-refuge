@@ -98,6 +98,8 @@ async function downloadSqliteFile() {
   if (!downloadSuccess) {
     try {
       console.log('📁 Attempting FTP download...');
+      console.log(`🔗 Connecting to ${CONFIG.server.host}:${CONFIG.server.port}`);
+      
       const Client = require('ftp');
       const client = new Client();
       
@@ -105,24 +107,51 @@ async function downloadSqliteFile() {
         client.on('ready', () => {
           console.log('✅ FTP connected successfully');
           
-          client.get(CONFIG.remoteSqlitePath, (err, stream) => {
-            if (err) {
-              reject(new Error(`FTP get error: ${err.message}`));
-              return;
+          // List directory first to verify connection and path
+          client.list('/', (listErr, list) => {
+            if (listErr) {
+              console.log('⚠️  Could not list root directory:', listErr.message);
+            } else {
+              console.log('📂 Root directory contents:', list.length, 'items found');
+              const pluginsDir = list.find(item => item.name === 'plugins');
+              if (pluginsDir) {
+                console.log('✅ Found plugins directory');
+              } else {
+                console.log('⚠️  No plugins directory found in root');
+                console.log('📁 Available directories:', list.filter(item => item.type === 'd').map(item => item.name));
+              }
             }
             
-            const writeStream = fs.createWriteStream(CONFIG.localSqlitePath);
-            stream.pipe(writeStream);
-            
-            stream.on('end', () => {
-              client.end();
-              console.log('✅ FTP download completed successfully');
-              resolve();
-            });
-            
-            stream.on('error', (streamErr) => {
-              client.end();
-              reject(new Error(`FTP stream error: ${streamErr.message}`));
+            // Try to get the database file
+            console.log(`📥 Attempting to download: ${CONFIG.remoteSqlitePath}`);
+            client.get(CONFIG.remoteSqlitePath, (err, stream) => {
+              if (err) {
+                // Try alternative paths
+                const alternativePaths = [
+                  '/plugins/Plan/Plan.db',
+                  '/plugins/Plan/database.db',
+                  '/server/plugins/Plan/database.db',
+                  '/server/plugins/Plan/Plan.db'
+                ];
+                
+                console.log('⚠️  Primary path failed, trying alternatives...');
+                tryAlternativePaths(client, alternativePaths, 0, resolve, reject);
+                return;
+              }
+              
+              const writeStream = fs.createWriteStream(CONFIG.localSqlitePath);
+              stream.pipe(writeStream);
+              
+              stream.on('end', () => {
+                client.end();
+                console.log('✅ FTP download completed successfully');
+                resolve();
+              });
+              
+              stream.on('error', (streamErr) => {
+                client.end();
+                reject(new Error(`FTP stream error: ${streamErr.message}`));
+              });
             });
           });
         });
@@ -131,13 +160,23 @@ async function downloadSqliteFile() {
           reject(new Error(`FTP connection error: ${connErr.message}`));
         });
         
-        client.connect({
+        const ftpConfig = {
           host: CONFIG.server.host,
           port: CONFIG.server.port === 22 ? 21 : CONFIG.server.port,
           user: CONFIG.server.username,
           password: CONFIG.server.password,
-          connTimeout: 20000
+          connTimeout: 20000,
+          keepalive: 0
+        };
+        
+        console.log('🔧 FTP Config:', { 
+          host: ftpConfig.host, 
+          port: ftpConfig.port, 
+          user: ftpConfig.user,
+          timeout: ftpConfig.connTimeout
         });
+        
+        client.connect(ftpConfig);
       });
       
       downloadSuccess = true;
@@ -181,6 +220,43 @@ Connection attempted:
   }
   
   console.log(`✅ SQLite file downloaded successfully (${Math.round(fileStats.size / 1024)}KB)`);
+}
+
+/**
+ * Try alternative paths for the PLAN database
+ */
+function tryAlternativePaths(client, paths, index, resolve, reject) {
+  if (index >= paths.length) {
+    client.end();
+    reject(new Error('PLAN database not found at any expected location'));
+    return;
+  }
+  
+  const currentPath = paths[index];
+  console.log(`🔍 Trying path ${index + 1}/${paths.length}: ${currentPath}`);
+  
+  client.get(currentPath, (err, stream) => {
+    if (err) {
+      console.log(`❌ Path ${currentPath} failed: ${err.message}`);
+      tryAlternativePaths(client, paths, index + 1, resolve, reject);
+      return;
+    }
+    
+    console.log(`✅ Found database at: ${currentPath}`);
+    const writeStream = fs.createWriteStream(CONFIG.localSqlitePath);
+    stream.pipe(writeStream);
+    
+    stream.on('end', () => {
+      client.end();
+      console.log('✅ Alternative path download completed successfully');
+      resolve();
+    });
+    
+    stream.on('error', (streamErr) => {
+      client.end();
+      reject(new Error(`FTP stream error: ${streamErr.message}`));
+    });
+  });
 }
 
 /**
