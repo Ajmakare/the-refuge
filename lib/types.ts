@@ -24,7 +24,6 @@ export interface PlayerStats {
 export interface LeaderboardData {
   mostActive: PlayerStats[];
   topKillers: PlayerStats[];
-  longestSessions: PlayerStats[];
   mostDeaths: PlayerStats[];
   lastUpdated: string;
 }

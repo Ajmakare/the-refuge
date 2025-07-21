@@ -85,7 +85,7 @@ jobs:
           const data = JSON.parse(require('fs').readFileSync('public/data/leaderboards.json', 'utf8'));
           console.log('  - Most Active:', data.mostActive.length, 'players');
           console.log('  - Top Killers:', data.topKillers.length, 'players');
-          console.log('  - Longest Sessions:', data.longestSessions.length, 'players');
+          console.log('  - Most Deaths:', data.mostDeaths.length, 'players');
           console.log('  - Last Updated:', data.lastUpdated);
         "
     
@@ -111,8 +111,7 @@ jobs:
             const data = JSON.parse(require('fs').readFileSync('public/data/leaderboards.json', 'utf8'));
             console.log('- Most Active: ' + data.mostActive.length + ' players');
             console.log('- Top Killers: ' + data.topKillers.length + ' players');
-            console.log('- Longest Sessions: ' + data.longestSessions.length + ' players');
-            console.log('- Top Builders: ' + data.topBuilders.length + ' players');
+            console.log('- Most Deaths: ' + data.mostDeaths.length + ' players');
             if (data.mostActive[0]) console.log('- Top Player: ' + data.mostActive[0].name + ' (' + Math.round(data.mostActive[0].playtime/3600000) + 'h playtime)');
           } catch(e) { console.log('- Error reading stats'); }
         ")
