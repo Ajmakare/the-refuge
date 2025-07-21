@@ -7,7 +7,8 @@
     "sync": "node sync-plan-data.js",
     "sync:dev": "DEV_MODE=true node sync-plan-data.js",
     "sync:production": "NODE_ENV=production node sync-plan-data.js",
-    "test-connection": "node test-connection.js"
+    "test-connection": "node test-connection.js",
+    "inspect-db": "node inspect-database.js"
   },
   "dependencies": {
     "sqlite3": "^5.1.6"

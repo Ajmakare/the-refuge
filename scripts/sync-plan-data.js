@@ -492,6 +492,26 @@ async function extractPlayerStats() {
       lastUpdated: new Date().toISOString()
     };
 
+    // First, inspect the database structure
+    console.log('🔍 Inspecting PLAN database structure...');
+    
+    // Check what tables exist
+    db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, tables) => {
+      if (err) {
+        console.log('❌ Error listing tables:', err.message);
+      } else {
+        console.log('📋 Available tables:', tables.map(t => t.name).join(', '));
+        
+        // Check for PLAN-specific tables
+        const planTables = tables.filter(t => t.name.toLowerCase().includes('plan'));
+        if (planTables.length === 0) {
+          console.log('⚠️  No PLAN tables found. This might be a new/empty database.');
+        } else {
+          console.log('✅ Found PLAN tables:', planTables.map(t => t.name).join(', '));
+        }
+      }
+    });
+
     let completed = 0;
     const queries = 4; // Number of queries we'll run
 
@@ -499,6 +519,11 @@ async function extractPlayerStats() {
       completed++;
       if (completed === queries) {
         db.close();
+        console.log('📊 Final leaderboard summary:');
+        console.log(`   - Most Active: ${leaderboardData.mostActive.length} players`);
+        console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
+        console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
+        console.log(`   - Top Builders: ${leaderboardData.topBuilders.length} players`);
         resolve(leaderboardData);
       }
     }
@@ -529,8 +554,13 @@ async function extractPlayerStats() {
 
     db.all(activePlayersQuery, [CONFIG.limits.mostActive], (err, rows) => {
       if (err) {
-        console.error('Error querying most active players:', err);
+        console.error('❌ Error querying most active players:', err.message);
+        console.log('💡 This might indicate the table structure is different than expected');
       } else {
+        console.log(`🔍 Most Active query returned ${rows.length} rows`);
+        if (rows.length > 0) {
+          console.log('📋 Sample row:', JSON.stringify(rows[0], null, 2));
+        }
         leaderboardData.mostActive = rows.map(row => ({
           uuid: row.uuid,
           name: row.name,
@@ -570,8 +600,9 @@ async function extractPlayerStats() {
       LIMIT ?
     `, [CONFIG.limits.topKillers], (err, rows) => {
       if (err) {
-        console.error('Error querying top killers:', err);
+        console.error('❌ Error querying top killers:', err.message);
       } else {
+        console.log(`🔍 Top Killers query returned ${rows.length} rows`);
         leaderboardData.topKillers = rows.map(row => ({
           uuid: row.uuid,
           name: row.name,
