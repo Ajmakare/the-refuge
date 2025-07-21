@@ -3,8 +3,8 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 77971714,
-      "sessions": 20,
+      "playtime": 88784094,
+      "sessions": 21,
       "kills": {
         "mob": 0,
         "player": 0
@@ -12,8 +12,38 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-21T02:56:54.021Z",
+      "lastSeen": "2025-07-21T06:00:10.645Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
+    },
+    {
+      "uuid": "972948e6-8c11-4381-94af-15432e6ba728",
+      "name": "Stupidvirgo",
+      "playtime": 74400397,
+      "sessions": 13,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-21T06:00:10.693Z",
+      "joinDate": "2025-07-17T21:58:56.221Z"
+    },
+    {
+      "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
+      "name": "McChickenribs",
+      "playtime": 64757885,
+      "sessions": 15,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-21T06:00:10.681Z",
+      "joinDate": "2025-07-17T21:09:11.671Z"
     },
     {
       "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
@@ -31,6 +61,21 @@
       "joinDate": "2025-07-17T21:04:41.308Z"
     },
     {
+      "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
+      "name": "Pentatope",
+      "playtime": 61156790,
+      "sessions": 10,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-21T05:49:52.402Z",
+      "joinDate": "2025-07-17T23:19:21.241Z"
+    },
+    {
       "uuid": "1bd7d04a-ebb3-4ee7-b687-c87b48db9071",
       "name": "OgLmx",
       "playtime": 59527705,
@@ -44,21 +89,6 @@
       "blocksBroken": 0,
       "lastSeen": "2025-07-21T03:16:36.465Z",
       "joinDate": "2025-07-17T21:04:24.557Z"
-    },
-    {
-      "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
-      "name": "Pentatope",
-      "playtime": 56409920,
-      "sessions": 9,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "blocksPlaced": 0,
-      "blocksBroken": 0,
-      "lastSeen": "2025-07-21T04:30:38.225Z",
-      "joinDate": "2025-07-17T23:19:21.241Z"
     },
     {
       "uuid": "8a2499a5-d07b-4788-afd4-555630148f28",
@@ -76,40 +106,10 @@
       "joinDate": "2025-07-17T21:31:29.635Z"
     },
     {
-      "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
-      "name": "McChickenribs",
-      "playtime": 53308742,
-      "sessions": 14,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "blocksPlaced": 0,
-      "blocksBroken": 0,
-      "lastSeen": "2025-07-21T02:11:25.906Z",
-      "joinDate": "2025-07-17T21:09:11.671Z"
-    },
-    {
-      "uuid": "972948e6-8c11-4381-94af-15432e6ba728",
-      "name": "Stupidvirgo",
-      "playtime": 52836454,
-      "sessions": 12,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "blocksPlaced": 0,
-      "blocksBroken": 0,
-      "lastSeen": "2025-07-20T23:59:03.799Z",
-      "joinDate": "2025-07-17T21:58:56.221Z"
-    },
-    {
       "uuid": "ef78e3c2-2859-4b12-9478-23323df75d85",
       "name": "Mattaroni",
-      "playtime": 47704459,
-      "sessions": 6,
+      "playtime": 48633808,
+      "sessions": 7,
       "kills": {
         "mob": 0,
         "player": 0
@@ -117,7 +117,7 @@
       "deaths": 0,
       "blocksPlaced": 0,
       "blocksBroken": 0,
-      "lastSeen": "2025-07-21T05:34:31.521Z",
+      "lastSeen": "2025-07-21T05:50:36.301Z",
       "joinDate": "2025-07-18T02:16:22.829Z"
     },
     {
@@ -228,6 +228,21 @@
       "joinDate": "2025-07-17T21:08:29.988Z"
     },
     {
+      "uuid": "7d287bcf-ca9f-483c-a619-feb15aa5a6bf",
+      "name": "Jazzyfae",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 1
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-21T00:47:54.953Z",
+      "joinDate": "2025-07-21T00:47:54.953Z"
+    },
+    {
       "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
       "name": "CDBBoss",
       "playtime": 0,
@@ -256,9 +271,24 @@
       "blocksBroken": 0,
       "lastSeen": "2025-07-17T22:03:11.334Z",
       "joinDate": "2025-07-17T22:03:11.334Z"
+    },
+    {
+      "uuid": "f8235ef5-a816-4b85-9c91-738d5ae3e4a7",
+      "name": "Pri5marine",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 1
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-18T03:04:55.559Z",
+      "joinDate": "2025-07-18T03:04:55.559Z"
     }
   ],
   "longestSessions": [],
   "topBuilders": [],
-  "lastUpdated": "2025-07-21T05:50:33.522Z"
+  "lastUpdated": "2025-07-21T06:19:11.267Z"
 }
