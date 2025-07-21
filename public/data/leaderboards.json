@@ -1,7 +1,158 @@
 {
-  "mostActive": [],
+  "mostActive": [
+    {
+      "uuid": "7d287bcf-ca9f-483c-a619-feb15aa5a6bf",
+      "name": "Jazzyfae",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-21T00:47:54.953Z",
+      "joinDate": "2025-07-21T00:47:54.953Z"
+    },
+    {
+      "uuid": "48fa6f96-75b7-47c1-868e-042d0797d036",
+      "name": "JawBroke",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-20T21:05:10.860Z",
+      "joinDate": "2025-07-20T21:05:10.860Z"
+    },
+    {
+      "uuid": "8c504ce7-f1ec-4320-a808-6c9d74a4feaa",
+      "name": "Austin009",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-20T03:00:19.233Z",
+      "joinDate": "2025-07-20T03:00:19.233Z"
+    },
+    {
+      "uuid": "30a0efe6-aa4a-41fd-bdb3-13a3e6b73027",
+      "name": "Fonsered",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-19T04:05:36.064Z",
+      "joinDate": "2025-07-19T04:05:36.064Z"
+    },
+    {
+      "uuid": "11c96dd7-2c23-4bad-b0c9-b1cfc155c16c",
+      "name": "A_SageKiller",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-18T22:43:55.475Z",
+      "joinDate": "2025-07-18T22:43:55.475Z"
+    },
+    {
+      "uuid": "e66f8dbb-d80e-4d54-8c79-010e55ce8e31",
+      "name": "avrampt",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-18T19:30:21.500Z",
+      "joinDate": "2025-07-18T19:30:21.500Z"
+    },
+    {
+      "uuid": "d865d096-f352-4f3f-841e-3e68df434a8c",
+      "name": "Jaczif",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-18T16:23:37.326Z",
+      "joinDate": "2025-07-18T16:23:37.326Z"
+    },
+    {
+      "uuid": "65b52db0-eb88-4f77-b348-497ec5aebec5",
+      "name": "k1ngslayer2105",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-18T15:34:15.407Z",
+      "joinDate": "2025-07-18T15:34:15.407Z"
+    },
+    {
+      "uuid": "5b1fd4ae-fdce-4a2b-a82a-3beda3abe893",
+      "name": "Flameingbolt",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-18T12:32:28.150Z",
+      "joinDate": "2025-07-18T12:32:28.150Z"
+    },
+    {
+      "uuid": "02354f37-28d4-4feb-8668-daa1c3238c09",
+      "name": "Nilahh",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-18T06:44:53.838Z",
+      "joinDate": "2025-07-18T06:44:53.838Z"
+    }
+  ],
   "topKillers": [],
   "longestSessions": [],
   "topBuilders": [],
-  "lastUpdated": "2025-07-21T01:26:40.198Z"
+  "lastUpdated": "2025-07-21T01:31:16.474Z"
 }
