@@ -689,13 +689,13 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           SUM(COALESCE(s.afk_time, 0)) as afk_time,
           p.registered as join_date,
           MAX(s.${columns.sessionEnd}) as last_seen,
-          CAST(AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) / 60000 AS INTEGER) as avg_session_length_minutes,
-          -- Calculate activity score with logical weighting
+          CAST(AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) / (60 * 1000) AS INTEGER) as avg_session_length_minutes,
+          -- Calculate activity score with logical weighting (SQLite compatible)
           CAST(
             -- Recent activity (last 30 days) - 70% weight (most important)
             COALESCE(SUM(
               CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 2592000) * 1000
-                   THEN GREATEST(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
+                   THEN MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
                    ELSE 0 END
             ), 0) * 0.7
             -- Consistency bonus (days with sessions in last 30 days) - 20% weight
@@ -705,7 +705,11 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
                      ELSE NULL END
               ) * 3600000 * 0.2)  -- 1 hour equivalent per active day
             -- Total active time bonus (all-time engaged time) - 10% weight  
-            + GREATEST(0, SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) * 0.1
+            + CASE 
+                WHEN (SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) > 0 
+                THEN (SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) * 0.1
+                ELSE 0 
+              END
           AS INTEGER) as activity_score
         FROM ${tables.players} p
         LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
@@ -985,7 +989,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           kills: { mob: 0, player: 0 },
           deaths: 0,
           afkTime: row.total_afk_time || 0,
-          avgSessionLength: Math.round((row.dedication_score || 0) / 60000), // Dedication score in minutes
+          avgSessionLength: Math.round((row.total_playtime || 0) / Math.max(1, row.total_sessions) / (60 * 1000)) || 0, // Average session length in minutes
           lastSeen: new Date(row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));
@@ -998,16 +1002,14 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
   }
 
   // Query 4: Most Deaths
-  if (tables.players && tables.sessions) {
+  if (tables.players && tables.deaths) {
     const deathsQuery = `
       SELECT 
         p.uuid, p.name, p.registered as join_date,
-        SUM(COALESCE(s.deaths, 0)) as total_deaths,
-        COUNT(s.id) as sessions
+        COALESCE(d.deaths, 0) as total_deaths
       FROM ${tables.players} p
-      LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId || 'user_id'}
-      GROUP BY p.uuid, p.name, p.registered
-      HAVING total_deaths > 0
+      LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid
+      WHERE COALESCE(d.deaths, 0) > 0
       ORDER BY total_deaths DESC
       LIMIT ?
     `;
@@ -1021,7 +1023,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           uuid: row.uuid,
           name: row.name,
           playtime: 0,
-          sessions: row.sessions || 0,
+          sessions: 0,
           kills: { mob: 0, player: 0 },
           deaths: row.total_deaths || 0,
           afkTime: 0,
