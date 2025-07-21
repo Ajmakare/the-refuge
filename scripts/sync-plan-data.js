@@ -690,18 +690,22 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           p.registered as join_date,
           MAX(s.${columns.sessionEnd}) as last_seen,
           CAST(AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) / 60000 AS INTEGER) as avg_session_length_minutes,
-          -- Calculate activity score considering multiple factors
+          -- Calculate activity score with logical weighting
           CAST(
-            -- Base active time (total playtime - afk time, minimum 0)
-            MAX(0, SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) * 0.4
-            -- Session frequency bonus (more regular players get bonus)
-            + (COUNT(s.id) * 3600000 * 0.3)  -- 1 hour equivalent per session
-            -- Recent activity bonus (within last 7 days gets 20% bonus)
-            + CASE WHEN MAX(s.${columns.sessionEnd}) > (strftime('%s', 'now') - 604800) * 1000 
-                   THEN SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.2 
+            -- Recent activity (last 30 days) - 70% weight (most important)
+            COALESCE(SUM(
+              CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 2592000) * 1000
+                   THEN GREATEST(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
                    ELSE 0 END
-            -- Engagement bonus (kills indicate active gameplay)
-            + (SUM(COALESCE(s.mob_kills, 0)) * 60000 * 0.1)  -- 1 minute equivalent per mob kill
+            ), 0) * 0.7
+            -- Consistency bonus (days with sessions in last 30 days) - 20% weight
+            + (COUNT(DISTINCT 
+                CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 2592000) * 1000
+                     THEN date(s.${columns.sessionEnd}/1000, 'unixepoch') 
+                     ELSE NULL END
+              ) * 3600000 * 0.2)  -- 1 hour equivalent per active day
+            -- Total active time bonus (all-time engaged time) - 10% weight  
+            + GREATEST(0, SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) * 0.1
           AS INTEGER) as activity_score
         FROM ${tables.players} p
         LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
@@ -939,7 +943,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
     });
   } else if (tables.sessions && columns.sessionStart && columns.sessionEnd && columns.userId) {
     // Individual session records approach (plan_sessions)
-    console.log('📊 Calculating longest average sessions from individual session records...');
+    console.log('📊 Calculating longest sessions based on sustained play dedication...');
     const longestSessionsQuery = `
       SELECT 
         p.uuid,
@@ -947,13 +951,24 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         p.registered as join_date,
         SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as total_playtime,
         COUNT(s.id) as total_sessions,
-        AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as avg_session_length,
-        SUM(COALESCE(s.afk_time, 0)) as total_afk_time
+        MAX(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as longest_single_session,
+        SUM(COALESCE(s.afk_time, 0)) as total_afk_time,
+        -- Calculate session dedication score (simpler but effective)
+        CAST(
+          -- Longest single session (shows peak dedication) - 60% weight
+          MAX(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.6
+          -- Average session length (shows consistency) - 30% weight  
+          + AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.3
+          -- Recent activity bonus (active in last 7 days) - 10% weight
+          + CASE WHEN MAX(s.${columns.sessionEnd}) > (strftime('%s', 'now') - 604800) * 1000
+                 THEN AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.1
+                 ELSE 0 END
+        AS INTEGER) as dedication_score
       FROM ${tables.players} p
       LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
       GROUP BY p.uuid, p.name, p.registered
-      HAVING total_sessions > 0
-      ORDER BY avg_session_length DESC
+      HAVING total_sessions > 0 AND longest_single_session > 600000
+      ORDER BY dedication_score DESC
       LIMIT ?
     `;
 
@@ -970,7 +985,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           kills: { mob: 0, player: 0 },
           deaths: 0,
           afkTime: row.total_afk_time || 0,
-          avgSessionLength: Math.round((row.avg_session_length || 0) / 60000), // Convert to minutes
+          avgSessionLength: Math.round((row.dedication_score || 0) / 60000), // Dedication score in minutes
           lastSeen: new Date(row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));

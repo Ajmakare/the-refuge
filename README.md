@@ -1,196 +1,124 @@
 # The Refuge - Minecraft Server Website
 
-A modern, Minecraft-themed website for The Refuge server featuring player leaderboards, server statistics, and community integration.
+A modern, Minecraft-themed website for The Refuge server featuring advanced player leaderboards, intelligent activity scoring, and comprehensive server statistics.
 
 ## 🚀 Features
 
-- **Modern Design**: Minecraft-themed aesthetics with blocky elements and pixel fonts
-- **Responsive Layout**: Mobile-first design that works on all devices
-- **Player Leaderboards**: Real-time player statistics from PLAN plugin data
-- **Discord Integration**: Prominent Discord invite buttons for community building
-- **Google AdSense**: Clean ad integration for monetization
-- **Automated Data Sync**: GitHub Actions workflow for daily data updates
+### 🏆 Advanced Leaderboard System
+- **Smart Activity Scoring**: Sophisticated algorithm ranking players by active time, session frequency, recent activity, and engagement - not just raw playtime
+- **Complete Data Consistency**: All leaderboard tabs show consistent player statistics through intelligent data merging
+- **Four Leaderboard Categories**: 
+  - **Most Active**: Activity score-based ranking (replaces simple playtime)
+  - **Top Combat**: Combined mob kills + PvP kills with proper data aggregation  
+  - **Longest Sessions**: Average session length in minutes (more meaningful than total sessions)
+  - **Most Deaths**: Players who've learned the most from their mistakes
+
+### 🎨 Enhanced User Experience
+- **Improved Visual Design**: Better trophy colors with readable 3rd place bronze (#D2691E)
+- **Smart Timestamps**: Full date and time display for when data was last updated
+- **Optimized Server Stats**: Shows Most Active player, Top Killer, and Most Deaths instead of simple counts
+- **Responsive Design**: Mobile-first Minecraft-themed UI that works beautifully on all devices
+
+### 🔄 Robust Data Integration
+- **Universal PLAN Compatibility**: Supports both modern PLAN v5+ and Legacy PLAN v4 databases
+- **Intelligent Database Detection**: Automatically adapts to different table naming schemes
+- **Real-time Sync**: Automated updates every 30 minutes via GitHub Actions
+- **Fallback Support**: Graceful handling of missing tables or data structures
+
+### 🎯 Technical Excellence
+- **Modern Architecture**: Next.js 15 with App Router and TypeScript
+- **Performance Optimized**: Static generation with efficient data processing
+- **Discord Integration**: Seamless community connection
+- **AdSense Ready**: Clean monetization integration
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Next.js 14 with TypeScript
+- **Framework**: Next.js 15 with App Router and TypeScript
 - **Styling**: Tailwind CSS with custom Minecraft theme
-- **Deployment**: Vercel (optimized for static generation)
-- **Data Source**: PLAN plugin SQLite database
-- **CI/CD**: GitHub Actions for automated data synchronization
+- **Database Processing**: SQLite with dynamic schema detection  
+- **Deployment**: Vercel with automated GitHub Actions pipeline
+- **Data Source**: PLAN plugin with comprehensive compatibility layer
 
-## 📁 Project Structure
+## 📊 Leaderboard Intelligence
 
-```
-the-refuge-website/
-├── app/                        # Next.js app directory
-│   ├── page.tsx               # Homepage
-│   ├── leaderboards/          # Leaderboards page
-│   ├── layout.tsx             # Root layout with AdSense
-│   └── globals.css            # Global styles
-├── components/                # React components
-│   ├── ui/                    # UI components
-│   ├── AdSense.tsx            # Google AdSense component
-│   └── DiscordButton.tsx      # Discord invite button
-├── lib/                       # Utilities and types
-├── public/                    # Static assets
-│   └── data/                  # JSON data files
-├── scripts/                   # Data sync scripts
-│   └── sync-plan-data.js      # PLAN SQLite to JSON converter
-└── .github/workflows/         # GitHub Actions
-    └── sync-plan-data.yml     # Automated data sync
-```
+### 🧠 Activity Scoring Algorithm
+The "Most Active" leaderboard uses a sophisticated multi-factor scoring system:
+- **40% Active Time**: Total playtime minus AFK time (rewards genuine engagement)
+- **30% Session Frequency**: Regular players get bonus points (1 hour equivalent per session)
+- **20% Recent Activity**: Players active within 7 days receive additional weighting
+- **10% Engagement**: Mob kills indicate active gameplay (1 minute equivalent per kill)
 
-## 🔧 Setup Instructions
+### 📈 Data Processing Features
+- **Comprehensive Merging**: Player statistics are consistent across all leaderboard tabs
+- **Intelligent Queries**: Uses CTEs (Common Table Expressions) for complex data aggregation  
+- **Dual Database Support**: Automatically detects and adapts to PLAN v4/v5+ table structures
+- **Graceful Fallbacks**: Handles missing tables and incomplete data elegantly
 
-### 1. Clone and Install
+### 🏅 Current Leaderboard Categories
+- **Most Active**: Advanced activity score ranking (not simple playtime)
+- **Top Combat**: Combined mob and PvP kills with proper session data integration
+- **Longest Sessions**: Average session length in minutes (shows dedication patterns)
+- **Most Deaths**: Learning experiences and risk-taking behavior
 
-```bash
-git clone <your-repo>
-cd the-refuge-website
-npm install
-```
+## 🔄 Automated Data Pipeline
 
-### 2. Configure Environment Variables
+The website features a robust automated data synchronization system:
+- **Real-time Updates**: GitHub Actions workflow runs every 30 minutes
+- **Multi-Protocol Support**: SFTP primary with FTP fallback
+- **Error Handling**: Comprehensive logging and graceful error recovery
+- **Schema Detection**: Automatically adapts to different PLAN database versions
+- **Performance Optimized**: Efficient queries minimize database load
 
-Create a `.env.local` file:
+## 🎨 Design System
 
-```env
-# Google AdSense (replace with your publisher ID)
-NEXT_PUBLIC_ADSENSE_ID=ca-pub-XXXXXXXXXXXXXXXXX
+### Minecraft-Inspired Theme
+The website features a cohesive Minecraft aesthetic with:
+- **Custom Color Palette**: Grass greens, stone grays, gold accents, and diamond blues
+- **Pixel-Perfect Typography**: Geist Sans and Geist Mono for clean readability
+- **Blocky Elements**: Minecraft-themed UI components and card designs
+- **Trophy System**: Gold crown (1st), silver star (2nd), chocolate trophy (3rd) with distinct colors
 
-# GGServers Connection (for GitHub Actions)
-GGSERVERS_HOST=your-server.ggservers.com
-GGSERVERS_USERNAME=your-username
-GGSERVERS_PASSWORD=your-password
-GGSERVERS_PORT=21
-```
+### Technical Architecture
+- **Component-Based**: Reusable React components with consistent styling
+- **Responsive Grid**: Mobile-first approach with Tailwind CSS
+- **Performance Optimized**: Static generation with efficient data loading
+- **Accessible**: Clean typography and color contrast for readability
 
-### 3. Update Configuration
+## 🛡️ Database Compatibility
 
-**Discord Invite URL**: Update the Discord invite URL in:
-- `components/DiscordButton.tsx`
-- `app/page.tsx`
+The system supports multiple PLAN database versions and naming schemes:
 
-**Server Information**: Update server details in:
-- `app/page.tsx` (server IP, statistics)
-- `app/layout.tsx` (metadata)
+### Supported Schemas
+- **Modern PLAN v5+**: `plan_users`, `plan_sessions`, `plan_kills`, `plan_deaths`
+- **Legacy PLAN v4**: `plan_users`, `plan_user_info`, individual session records  
+- **Alternative Naming**: `players`, `sessions`, `kills`, `deaths` (simple names)
+- **Prefixed Tables**: `plandb_*` prefix variations
 
-**AdSense Configuration**: Replace placeholder AdSense client ID in:
-- `app/layout.tsx`
-- `components/AdSense.tsx`
+### Adaptive Query System
+- **Schema Detection**: Automatically identifies available tables and columns
+- **Dynamic Queries**: Adjusts SQL queries based on detected database structure
+- **Graceful Degradation**: Handles missing data with appropriate fallbacks
+- **Performance Optimized**: Uses efficient joins and CTEs for complex aggregations
 
-### 4. PLAN Data Integration
+## 🌟 Key Achievements
 
-#### Option A: Manual Sync (Getting Started)
-1. Download `Plan.db` from your GGServers file manager
-2. Place it in `scripts/temp/Plan.db`
-3. Run the sync script:
-   ```bash
-   cd scripts
-   npm install
-   npm run sync
-   ```
+This website represents a significant evolution in Minecraft server analytics:
 
-#### Option B: Automated Sync (Production)
-1. Set up GitHub repository secrets for GGServers access
-2. Update the download logic in `scripts/sync-plan-data.js`
-3. The GitHub Action will run daily and update data automatically
+- **Beyond Simple Stats**: Moves from basic playtime rankings to sophisticated engagement scoring
+- **Data Intelligence**: Implements complex data merging and consistency algorithms  
+- **Universal Compatibility**: Works with any PLAN database version or configuration
+- **User Experience Excellence**: Clean, intuitive interface with meaningful information display
+- **Performance & Reliability**: Robust error handling and efficient data processing
 
-### 5. Development
+## 📈 Impact
 
-```bash
-npm run dev
-```
-
-Visit `http://localhost:3000` to see your site.
-
-### 6. Deployment to Vercel
-
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on every push to main branch
-
-## 🔄 Data Sync Process
-
-The website uses a GitHub Actions workflow to automatically sync PLAN data:
-
-1. **Daily Schedule**: Runs at 6 AM UTC every day
-2. **Download**: Fetches the latest `Plan.db` from your server
-3. **Extract**: Converts SQLite data to JSON format
-4. **Update**: Commits updated JSON to the repository
-5. **Deploy**: Triggers automatic Vercel redeployment
-
-### Manual Data Sync
-
-To manually trigger a data sync:
-1. Go to your GitHub repository
-2. Click "Actions" tab
-3. Select "Sync PLAN Data" workflow
-4. Click "Run workflow"
-
-## 📊 Leaderboard Categories
-
-- **Most Active**: Players ranked by total playtime
-- **Top Killers**: Players ranked by mob kills
-- **Longest Sessions**: Players ranked by average session length
-- **Top Builders**: Players ranked by blocks placed
-
-## 🎨 Customization
-
-### Minecraft Theme Colors
-
-The site uses a custom Minecraft color palette defined in `tailwind.config.js`:
-
-- `minecraft-grass`: #8BC34A
-- `minecraft-dirt`: #8D6E63
-- `minecraft-stone`: #757575
-- `minecraft-gold`: #FFC107
-- `minecraft-diamond`: #00BCD4
-- `minecraft-emerald`: #4CAF50
-
-### Adding New Pages
-
-1. Create a new directory in `app/`
-2. Add a `page.tsx` file
-3. Follow the existing component patterns
-4. Update navigation in the layout components
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-1. **SQLite Database Access**: Ensure your GGServers credentials are correct and the PLAN plugin is generating the database at the expected path.
-
-2. **Missing Dependencies**: Run `npm install` in both the root directory and the `scripts/` directory.
-
-3. **AdSense Not Loading**: Verify your AdSense publisher ID is correct and your domain is approved.
-
-4. **GitHub Actions Failing**: Check the Actions tab for detailed error logs and ensure all secrets are configured.
-
-### PLAN Database Schema
-
-The sync script expects these PLAN database tables:
-- `plan_players` - Player information
-- `plan_sessions_summary` - Session statistics
-- `plan_kills` - Kill statistics
-- `plan_deaths` - Death counts
-- `plan_actions` - Block actions
-
-If your PLAN version uses different table names, update the queries in `scripts/sync-plan-data.js`.
-
-## 📝 License
-
-This project is for The Refuge Minecraft Server. Feel free to adapt for your own server.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+- **Enhanced Player Engagement**: More accurate representation of player activity encourages healthy competition
+- **Community Building**: Comprehensive statistics help players understand their gameplay patterns
+- **Technical Innovation**: Advanced database compatibility ensures long-term sustainability
+- **Visual Polish**: Professional design creates a premium experience for server communities
 
 ---
 
 Built with ❤️ for The Refuge Minecraft community
+
+*A testament to what's possible when technical excellence meets community passion*

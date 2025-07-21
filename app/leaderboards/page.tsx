@@ -4,7 +4,7 @@ import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star, Target } from "luci
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
-import { formatPlaytime, formatNumber, formatDate } from "@/lib/utils";
+import { formatPlaytime, formatNumber, formatDate, formatDateTime } from "@/lib/utils";
 
 export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
@@ -170,7 +170,7 @@ export default function Leaderboards() {
         return { 
           icon: <Clock style={{ width: "20px", height: "20px" }} />, 
           title: 'Most Active Players',
-          description: 'Players ranked by activity score (active time + engagement + frequency)'
+          description: 'Players ranked by recent activity (last 30 days) + consistency'
         };
       case 'killers': 
         return { 
@@ -182,7 +182,7 @@ export default function Leaderboards() {
         return { 
           icon: <Target style={{ width: "20px", height: "20px" }} />, 
           title: 'Longest Sessions',
-          description: 'Players with the most dedicated gaming sessions'
+          description: 'Players who can sustain the longest continuous play sessions'
         };
       case 'deaths':
         return {
@@ -203,14 +203,14 @@ export default function Leaderboards() {
     const getRankIcon = (rank: number) => {
       if (rank === 1) return <Crown style={{ width: "24px", height: "24px", color: "#FFD700" }} />;
       if (rank === 2) return <Star style={{ width: "24px", height: "24px", color: "#C0C0C0" }} />;
-      if (rank === 3) return <Trophy style={{ width: "24px", height: "24px", color: "#CD7F32" }} />;
+      if (rank === 3) return <Trophy style={{ width: "24px", height: "24px", color: "#D2691E" }} />;
       return <span style={{ color: "var(--primary)", fontSize: "18px", fontWeight: "600" }}>#{rank}</span>;
     };
 
     const getRankColor = (rank: number) => {
       if (rank === 1) return "linear-gradient(135deg, #FFD700, #FFA500)";
       if (rank === 2) return "linear-gradient(135deg, #C0C0C0, #A0A0A0)";
-      if (rank === 3) return "linear-gradient(135deg, #CD7F32, #B8860B)";
+      if (rank === 3) return "linear-gradient(135deg, #D2691E, #A0522D)";
       return "var(--primary)";
     };
 
@@ -250,7 +250,7 @@ export default function Leaderboards() {
       <div className="minecraft-card" style={{ 
         marginBottom: '16px',
         background: rank <= 3 ? 'rgba(255, 255, 255, 0.12)' : 'var(--glass-bg)',
-        border: rank <= 3 ? `2px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}` : '1px solid var(--glass-border)',
+        border: rank <= 3 ? `2px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#D2691E'}` : '1px solid var(--glass-border)',
         opacity: 1,
         transform: 'translateY(0)'
       }}>
@@ -560,15 +560,6 @@ export default function Leaderboards() {
             }}>
               See who&apos;s leading The Refuge community
             </p>
-            {data && (
-              <p style={{ 
-                fontSize: '14px', 
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                Last updated: {formatDate(data.lastUpdated)}
-              </p>
-            )}
           </div>
 
           {/* Tab Navigation */}
@@ -635,10 +626,20 @@ export default function Leaderboards() {
                 <p style={{ 
                   fontSize: '16px', 
                   color: 'rgba(255, 255, 255, 0.7)',
-                  fontFamily: 'Inter, sans-serif'
+                  fontFamily: 'Inter, sans-serif',
+                  marginBottom: '12px'
                 }}>
                   {currentTab.description}
                 </p>
+                {data && (
+                  <p style={{ 
+                    fontSize: '14px', 
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Updated {formatDateTime(data.lastUpdated)}
+                  </p>
+                )}
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -703,19 +704,6 @@ export default function Leaderboards() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
-                      Total Players:
-                    </span>
-                    <span style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '700', 
-                      color: 'var(--primary)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {data ? data.mostActive.length : 0}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
                       Most Active:
                     </span>
                     <span style={{ 
@@ -738,6 +726,19 @@ export default function Leaderboards() {
                       fontFamily: 'Inter, sans-serif'
                     }}>
                       {data && data.topKillers[0] ? data.topKillers[0].name : 'No data yet'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
+                      Most Deaths:
+                    </span>
+                    <span style={{ 
+                      fontSize: '16px', 
+                      fontWeight: '700', 
+                      color: 'var(--warning)',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {data && data.mostDeaths[0] ? data.mostDeaths[0].name : 'No data yet'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
