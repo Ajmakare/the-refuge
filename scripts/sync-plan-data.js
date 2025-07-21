@@ -668,8 +668,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: 0, player: 0 },
             deaths: 0,
             afkTime: 0,
-            daysActive: 0,
-            lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
+                        lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
         }
@@ -744,8 +743,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
                 kills: { mob: 0, player: 0 },
                 deaths: 0,
                 afkTime: 0,
-                daysActive: 0,
-                lastSeen: new Date(row.join_date).toISOString(),
+                                lastSeen: new Date(row.join_date).toISOString(),
                 joinDate: new Date(row.join_date).toISOString()
               }));
             }
@@ -792,8 +790,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: 0, player: 0 },
             deaths: 0,
             afkTime: 0,
-            daysActive: 0,
-            lastSeen: new Date(row.join_date).toISOString(),
+                        lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
         }
@@ -837,8 +834,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
             deaths: 0,
             afkTime: 0,
-            daysActive: 0,
-            lastSeen: new Date(row.join_date).toISOString(),
+                        lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
         }
@@ -891,8 +887,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
             deaths: 0,
             afkTime: 0,
-            daysActive: 0,
-            lastSeen: new Date(row.join_date).toISOString(),
+                        lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
         }
@@ -909,12 +904,12 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
 
   // Query 3: Longest Sessions - REMOVED per user request
   console.log('⚠️  Longest Sessions leaderboard removed - skipping query');
-  checkComplete();
 
   // Query 4: Most Deaths - Extract from sessions table if available
   if (tables.players) {
     if (tables.deaths) {
       // Use dedicated deaths table if available
+      console.log('📊 Using dedicated deaths table for Most Deaths query...');
       const deathsQuery = `
         SELECT 
           p.uuid, p.name, p.registered as join_date,
@@ -939,7 +934,6 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: 0, player: 0 },
             deaths: row.total_deaths || 0,
             afkTime: 0,
-            daysActive: 0,
             lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -969,6 +963,9 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           console.error('❌ Error querying deaths from sessions:', err.message);
         } else {
           console.log(`🔍 Session Deaths query returned ${rows.length} rows`);
+          if (rows.length > 0) {
+            console.log(`🔍 Sample death data:`, rows[0]);
+          }
           leaderboardData.mostDeaths = rows.map(row => ({
             uuid: row.uuid,
             name: row.name,
@@ -977,7 +974,6 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: 0, player: 0 },
             deaths: row.total_deaths || 0,
             afkTime: 0,
-            daysActive: 0,
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -1007,7 +1003,7 @@ function mergePlayerData(leaderboardData) {
   
   // Helper function to merge player data intelligently
   function mergePlayer(existing, newData) {
-    return {
+    const merged = {
       uuid: existing.uuid || newData.uuid,
       name: existing.name || newData.name,
       // Use the highest values for cumulative stats
@@ -1028,6 +1024,8 @@ function mergePlayerData(leaderboardData) {
       joinDate: (existing.joinDate && new Date(existing.joinDate) < new Date(newData.joinDate || Date.now())) 
                  ? existing.joinDate : (newData.joinDate || existing.joinDate)
     };
+    
+    return merged;
   }
   
   // Collect all unique players from all leaderboards
@@ -1046,15 +1044,18 @@ function mergePlayerData(leaderboardData) {
     }
   });
   
-  // Update each leaderboard with complete player data while preserving ranking
-  leaderboardData.mostActive = leaderboardData.mostActive.map(player => 
-    ({ ...playerMap.get(player.uuid), activityScore: player.activityScore }));
+  // Update each leaderboard with complete player data while preserving ranking and limits
+  leaderboardData.mostActive = leaderboardData.mostActive
+    .map(player => ({ ...playerMap.get(player.uuid), activityScore: player.activityScore }))
+    .slice(0, CONFIG.limits.mostActive);
   
-  leaderboardData.topKillers = leaderboardData.topKillers.map(player => 
-    playerMap.get(player.uuid));
+  leaderboardData.topKillers = leaderboardData.topKillers
+    .map(player => playerMap.get(player.uuid))
+    .slice(0, CONFIG.limits.topKillers);
     
-  leaderboardData.mostDeaths = leaderboardData.mostDeaths.map(player => 
-    playerMap.get(player.uuid));
+  leaderboardData.mostDeaths = leaderboardData.mostDeaths
+    .map(player => playerMap.get(player.uuid))
+    .slice(0, CONFIG.limits.mostDeaths);
   
   console.log(`✅ Merged data for ${playerMap.size} unique players across all leaderboards`);
 }
@@ -1064,11 +1065,11 @@ function mergePlayerData(leaderboardData) {
  */
 function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
   let completed = 0;
-  const queries = 3; // Only 3 queries: mostActive, topKillers, mostDeaths
+  let totalQueries = 0; // Dynamic count based on which queries actually run
 
   function checkComplete() {
     completed++;
-    if (completed === queries) {
+    if (completed === totalQueries) {
       db.close();
       
       // Merge player data for consistency across leaderboards
@@ -1084,6 +1085,12 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
 
   // Build dynamic queries based on available tables
   const tables = scheme.tables;
+  
+  // Count how many queries will actually run
+  if (tables.players) totalQueries++; // Most Active
+  if (tables.players && tables.kills) totalQueries++; // Top Killers
+  if (tables.players) totalQueries++; // Most Deaths (always runs if players table exists)
+  
   
   // Detect column structure for key tables
   detectColumnStructure(db, tables, (columnMapping) => {
