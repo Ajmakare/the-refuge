@@ -26,8 +26,8 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (err) => {
   console.log('✅ Database opened successfully');
 });
 
-// Get table structure for key tables
-const keyTables = ['plan_users', 'plan_user_info', 'plan_sessions', 'plan_kills', 'plan_players'];
+// Get table structure for key tables found in your database
+const keyTables = ['plan_users', 'plan_user_info', 'plan_sessions', 'plan_kills', 'plan_servers', 'plan_worlds'];
 
 let tablesChecked = 0;
 const totalTables = keyTables.length;
@@ -47,10 +47,15 @@ keyTables.forEach(tableName => {
       });
       
       // Show sample data for key tables
-      if (tableName === 'plan_users' || tableName === 'plan_user_info') {
-        db.all(`SELECT * FROM ${tableName} LIMIT 1`, [], (err, sample) => {
+      if (['plan_users', 'plan_user_info', 'plan_sessions', 'plan_kills'].includes(tableName)) {
+        db.all(`SELECT * FROM ${tableName} LIMIT 2`, [], (err, sample) => {
           if (!err && sample.length > 0) {
-            console.log(`   📋 Sample data: ${JSON.stringify(sample[0], null, 2)}`);
+            console.log(`   📋 Sample data (${sample.length} rows):`);
+            sample.forEach((row, i) => {
+              console.log(`     ${i + 1}. ${JSON.stringify(row)}`);
+            });
+          } else if (!err) {
+            console.log(`   📋 Table is empty`);
           }
         });
       }
