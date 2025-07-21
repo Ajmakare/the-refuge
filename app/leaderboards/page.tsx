@@ -8,7 +8,7 @@ import { formatPlaytime, formatNumber, formatDate } from "@/lib/utils";
 
 export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
-  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'sessions' | 'builders'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'sessions' | 'builders' | 'deaths' | 'ping' | 'survival' | 'creative'>('active');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,6 +74,13 @@ export default function Leaderboards() {
       console.log('getActiveData: No data available');
       return [];
     }
+    
+    // Create a map of players from mostActive for merging with other data
+    const activePlayersMap = new Map<string, PlayerStats>();
+    data.mostActive.forEach(player => {
+      activePlayersMap.set(player.uuid, player);
+    });
+    
     let result: PlayerStats[];
     switch (activeTab) {
       case 'active': 
@@ -84,19 +91,47 @@ export default function Leaderboards() {
         });
         break;
       case 'killers': 
-        // For killers, only show players with kills > 0, or fallback to all players
-        result = data.topKillers.length > 0 ? data.topKillers : 
-          data.mostActive.filter(p => (p.kills.mob + p.kills.player) > 0);
+        // Merge killer data with active player data to get complete stats
+        result = data.topKillers
+          .filter(killer => (killer.kills.mob + killer.kills.player) > 0)
+          .map(killer => {
+            const activePlayer = activePlayersMap.get(killer.uuid);
+            return activePlayer ? {
+              ...activePlayer,
+              kills: killer.kills // Use kill data from topKillers
+            } : killer;
+          })
+          .sort((a, b) => (b.kills.mob + b.kills.player) - (a.kills.mob + a.kills.player));
         break;
       case 'sessions': 
-        // For sessions, only show players with sessions > 0, or fallback to active players
+        // For sessions, use longest sessions if available, otherwise filter active players
         result = data.longestSessions.length > 0 ? data.longestSessions :
-          data.mostActive.filter(p => p.sessions > 0);
+          data.mostActive.filter(p => p.sessions > 0).sort((a, b) => b.sessions - a.sessions);
         break;
       case 'builders': 
-        // For builders, only show players with blocks > 0, or fallback to all players
+        // For builders, use top builders if available, otherwise filter active players
         result = data.topBuilders.length > 0 ? data.topBuilders :
-          data.mostActive.filter(p => p.blocksPlaced > 0);
+          data.mostActive.filter(p => p.blocksPlaced > 0).sort((a, b) => b.blocksPlaced - a.blocksPlaced);
+        break;
+      case 'deaths':
+        // Most deaths leaderboard
+        result = data.mostDeaths.length > 0 ? data.mostDeaths :
+          data.mostActive.filter(p => p.deaths > 0).sort((a, b) => b.deaths - a.deaths);
+        break;
+      case 'ping':
+        // Best ping leaderboard (lowest ping wins)
+        result = data.bestPing.length > 0 ? data.bestPing :
+          data.mostActive.filter(p => p.avgPing && p.avgPing > 0).sort((a, b) => (a.avgPing || 999) - (b.avgPing || 999));
+        break;
+      case 'survival':
+        // Survival time leaderboard
+        result = data.survivalTime.length > 0 ? data.survivalTime :
+          data.mostActive.filter(p => p.survivalTime && p.survivalTime > 0).sort((a, b) => (b.survivalTime || 0) - (a.survivalTime || 0));
+        break;
+      case 'creative':
+        // Creative masters leaderboard
+        result = data.creativeMasters.length > 0 ? data.creativeMasters :
+          data.mostActive.filter(p => p.creativeTime && p.creativeTime > 0).sort((a, b) => (b.creativeTime || 0) - (a.creativeTime || 0));
         break;
       default: 
         result = [];
@@ -130,6 +165,30 @@ export default function Leaderboards() {
           icon: <Building style={{ width: "20px", height: "20px" }} />, 
           title: 'Top Builders',
           description: 'Players who have placed the most blocks'
+        };
+      case 'deaths':
+        return {
+          icon: <Trophy style={{ width: "20px", height: "20px", color: "#ef4444" }} />,
+          title: 'Most Deaths',
+          description: 'Players who have died the most (learning experiences!)'
+        };
+      case 'ping':
+        return {
+          icon: <BarChart3 style={{ width: "20px", height: "20px", color: "#10b981" }} />,
+          title: 'Best Connection',
+          description: 'Players with the lowest ping (best connection)'
+        };
+      case 'survival':
+        return {
+          icon: <Home style={{ width: "20px", height: "20px", color: "#f59e0b" }} />,
+          title: 'Survival Masters',
+          description: 'Players who have spent the most time in survival mode'
+        };
+      case 'creative':
+        return {
+          icon: <Star style={{ width: "20px", height: "20px", color: "#8b5cf6" }} />,
+          title: 'Creative Masters',
+          description: 'Players who have spent the most time in creative mode'
         };
       default: 
         return { 
@@ -176,6 +235,26 @@ export default function Leaderboards() {
           return { 
             value: player.blocksPlaced > 0 ? formatNumber(player.blocksPlaced) : 'Starting', 
             label: player.blocksPlaced > 0 ? 'Blocks Placed' : 'Ready to Build' 
+          };
+        case 'deaths':
+          return {
+            value: player.deaths > 0 ? formatNumber(player.deaths) : '0',
+            label: 'Deaths'
+          };
+        case 'ping':
+          return {
+            value: player.avgPing ? `${player.avgPing}ms` : 'Unknown',
+            label: 'Average Ping'
+          };
+        case 'survival':
+          return {
+            value: player.survivalTime ? formatPlaytime(player.survivalTime) : '0h',
+            label: 'Survival Time'
+          };
+        case 'creative':
+          return {
+            value: player.creativeTime ? formatPlaytime(player.creativeTime) : '0h',
+            label: 'Creative Time'
           };
         default: 
           return { 
@@ -516,16 +595,20 @@ export default function Leaderboards() {
           <div className="slide-up" style={{ marginBottom: '48px' }}>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '12px',
-              maxWidth: '800px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+              gap: '8px',
+              maxWidth: '1000px',
               margin: '0 auto'
             }}>
               {[
                 { key: 'active' as const, label: 'Most Active' },
                 { key: 'killers' as const, label: 'Top Combat' },
-                { key: 'sessions' as const, label: 'Long Sessions' },
-                { key: 'builders' as const, label: 'Top Builders' },
+                { key: 'sessions' as const, label: 'Sessions' },
+                { key: 'builders' as const, label: 'Builders' },
+                { key: 'deaths' as const, label: 'Most Deaths' },
+                { key: 'ping' as const, label: 'Best Ping' },
+                { key: 'survival' as const, label: 'Survival' },
+                { key: 'creative' as const, label: 'Creative' },
               ].map(tab => {
                 const config = getTabConfig(tab.key);
                 return (

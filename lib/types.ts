@@ -12,6 +12,12 @@ export interface PlayerStats {
   blocksBroken: number;
   lastSeen: string;
   joinDate: string;
+  // Optional additional stats for specialized leaderboards
+  avgPing?: number;
+  pingRecords?: number;
+  survivalTime?: number;
+  creativeTime?: number;
+  adventureTime?: number;
 }
 
 export interface LeaderboardData {
@@ -19,6 +25,10 @@ export interface LeaderboardData {
   topKillers: PlayerStats[];
   longestSessions: PlayerStats[];
   topBuilders: PlayerStats[];
+  mostDeaths: PlayerStats[];
+  bestPing: PlayerStats[];
+  survivalTime: PlayerStats[];
+  creativeMasters: PlayerStats[];
   lastUpdated: string;
 }
 

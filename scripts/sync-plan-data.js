@@ -25,10 +25,14 @@ const CONFIG = {
   
   // Data limits
   limits: {
-    mostActive: 10,
-    topKillers: 10,
-    longestSessions: 10,
-    topBuilders: 10,
+    mostActive: 15,
+    topKillers: 15,
+    longestSessions: 15,
+    topBuilders: 15,
+    mostDeaths: 15,
+    bestPing: 15,
+    survivalTime: 15,
+    creativeMasters: 15,
   }
 };
 
@@ -636,7 +640,7 @@ function detectColumnStructure(db, tables, callback) {
 /**
  * Run queries with column mapping
  */
-function runQueriesWithColumns(db, tables, columns, leaderboardData, checkComplete) {
+function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, checkComplete) {
   // Query 1: Most Active Players or Basic Player List
   if (tables.players) {
     if (tables.sessions && columns.playtime) {
@@ -908,7 +912,183 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, checkComple
     checkComplete();
   }
 
-  // Query 4: Top Builders (skip if no actions table)
+  // Query 4: Most Deaths
+  if (tables.players && tables.sessions) {
+    const deathsQuery = `
+      SELECT 
+        p.uuid, p.name, p.registered as join_date,
+        SUM(COALESCE(s.deaths, 0)) as total_deaths,
+        COUNT(s.id) as sessions
+      FROM ${tables.players} p
+      LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId || 'user_id'}
+      GROUP BY p.uuid, p.name, p.registered
+      HAVING total_deaths > 0
+      ORDER BY total_deaths DESC
+      LIMIT ?
+    `;
+
+    db.all(deathsQuery, [CONFIG.limits.mostDeaths], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying most deaths:', err.message);
+      } else {
+        console.log(`🔍 Most Deaths query returned ${rows.length} rows`);
+        leaderboardData.mostDeaths = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: 0,
+          sessions: row.sessions || 0,
+          kills: { mob: 0, player: 0 },
+          deaths: row.total_deaths || 0,
+          blocksPlaced: 0,
+          blocksBroken: 0,
+          lastSeen: new Date(row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else {
+    console.log('⚠️  Skipping Most Deaths query - missing required tables');
+    checkComplete();
+  }
+
+  // Query 5: Best Ping (lowest average)
+  const hasPingTable = Object.keys(scheme.tables).some(key => 
+    scheme.tables[key] === 'plan_ping'
+  );
+  
+  if (hasPingTable && tables.players) {
+    const pingQuery = `
+      SELECT 
+        u.uuid, u.name, u.registered as join_date,
+        AVG(p.avg_ping) as avg_ping,
+        COUNT(p.id) as ping_records
+      FROM plan_users u
+      LEFT JOIN plan_ping p ON u.id = p.user_id
+      GROUP BY u.uuid, u.name, u.registered
+      HAVING ping_records > 5 AND avg_ping > 0
+      ORDER BY avg_ping ASC
+      LIMIT ?
+    `;
+
+    db.all(pingQuery, [CONFIG.limits.bestPing], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying best ping:', err.message);
+      } else {
+        console.log(`🔍 Best Ping query returned ${rows.length} rows`);
+        leaderboardData.bestPing = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: 0,
+          sessions: 0,
+          kills: { mob: 0, player: 0 },
+          deaths: 0,
+          blocksPlaced: 0,
+          blocksBroken: 0,
+          avgPing: Math.round(row.avg_ping || 0),
+          pingRecords: row.ping_records || 0,
+          lastSeen: new Date(row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else {
+    console.log('⚠️  Skipping Best Ping query - missing plan_ping table');
+    checkComplete();
+  }
+
+  // Query 6: Survival Time Leaders
+  const hasWorldTimes = Object.keys(scheme.tables).some(key => 
+    scheme.tables[key] === 'plan_world_times'
+  );
+  
+  if (hasWorldTimes && tables.players) {
+    const survivalQuery = `
+      SELECT 
+        u.uuid, u.name, u.registered as join_date,
+        SUM(wt.survival_time) as total_survival_time,
+        SUM(wt.creative_time) as total_creative_time,
+        SUM(wt.adventure_time) as total_adventure_time
+      FROM plan_users u
+      LEFT JOIN plan_world_times wt ON u.id = wt.user_id
+      GROUP BY u.uuid, u.name, u.registered
+      HAVING total_survival_time > 0
+      ORDER BY total_survival_time DESC
+      LIMIT ?
+    `;
+
+    db.all(survivalQuery, [CONFIG.limits.survivalTime], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying survival time:', err.message);
+      } else {
+        console.log(`🔍 Survival Time query returned ${rows.length} rows`);
+        leaderboardData.survivalTime = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: row.total_survival_time || 0,
+          sessions: 0,
+          kills: { mob: 0, player: 0 },
+          deaths: 0,
+          blocksPlaced: 0,
+          blocksBroken: 0,
+          survivalTime: row.total_survival_time || 0,
+          creativeTime: row.total_creative_time || 0,
+          adventureTime: row.total_adventure_time || 0,
+          lastSeen: new Date(row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else {
+    console.log('⚠️  Skipping Survival Time query - missing plan_world_times table');
+    checkComplete();
+  }
+
+  // Query 7: Creative Masters
+  if (hasWorldTimes && tables.players) {
+    const creativeQuery = `
+      SELECT 
+        u.uuid, u.name, u.registered as join_date,
+        SUM(wt.creative_time) as total_creative_time,
+        SUM(wt.survival_time) as total_survival_time
+      FROM plan_users u
+      LEFT JOIN plan_world_times wt ON u.id = wt.user_id
+      GROUP BY u.uuid, u.name, u.registered
+      HAVING total_creative_time > 0
+      ORDER BY total_creative_time DESC
+      LIMIT ?
+    `;
+
+    db.all(creativeQuery, [CONFIG.limits.creativeMasters], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying creative time:', err.message);
+      } else {
+        console.log(`🔍 Creative Masters query returned ${rows.length} rows`);
+        leaderboardData.creativeMasters = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: row.total_creative_time || 0,
+          sessions: 0,
+          kills: { mob: 0, player: 0 },
+          deaths: 0,
+          blocksPlaced: 0,
+          blocksBroken: 0,
+          creativeTime: row.total_creative_time || 0,
+          survivalTime: row.total_survival_time || 0,
+          lastSeen: new Date(row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else {
+    console.log('⚠️  Skipping Creative Masters query - missing plan_world_times table');
+    checkComplete();
+  }
+
+  // Query 8: Top Builders (skip if no actions table)
   console.log('⚠️  Skipping Top Builders query - missing required tables');
   checkComplete();
 }
@@ -918,7 +1098,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, checkComple
  */
 function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
   let completed = 0;
-  const queries = 4;
+  const queries = 8; // Increased for new leaderboard types
 
   function checkComplete() {
     completed++;
@@ -929,6 +1109,10 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
       console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
       console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
       console.log(`   - Top Builders: ${leaderboardData.topBuilders.length} players`);
+      console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
+      console.log(`   - Best Ping: ${leaderboardData.bestPing.length} players`);
+      console.log(`   - Survival Time: ${leaderboardData.survivalTime.length} players`);
+      console.log(`   - Creative Masters: ${leaderboardData.creativeMasters.length} players`);
       resolve(leaderboardData);
     }
   }
@@ -939,7 +1123,7 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
   // Detect column structure for key tables
   detectColumnStructure(db, tables, (columnMapping) => {
     console.log('🔧 Detected column mapping:', JSON.stringify(columnMapping, null, 2));
-    runQueriesWithColumns(db, tables, columnMapping, leaderboardData, checkComplete);
+    runQueriesWithColumns(db, tables, columnMapping, leaderboardData, scheme, checkComplete);
   });
 }
 
@@ -994,6 +1178,10 @@ async function extractPlayerStats() {
       topKillers: [],
       longestSessions: [],
       topBuilders: [],
+      mostDeaths: [],
+      bestPing: [],
+      survivalTime: [],
+      creativeMasters: [],
       lastUpdated: new Date().toISOString()
     };
 
@@ -1064,6 +1252,10 @@ async function main() {
     console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
     console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
     console.log(`   - Top Builders: ${leaderboardData.topBuilders.length} players`);
+    console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
+    console.log(`   - Best Ping: ${leaderboardData.bestPing.length} players`);
+    console.log(`   - Survival Time: ${leaderboardData.survivalTime.length} players`);
+    console.log(`   - Creative Masters: ${leaderboardData.creativeMasters.length} players`);
     
   } catch (error) {
     console.error('❌ Error during sync:', error.message);
