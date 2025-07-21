@@ -75,78 +75,92 @@ export default function Leaderboards() {
       return [];
     }
     
-    // Create a map of players from mostActive for merging with other data
-    const activePlayersMap = new Map<string, PlayerStats>();
-    data.mostActive.forEach(player => {
-      activePlayersMap.set(player.uuid, player);
-    });
+    // Create comprehensive player data by merging ALL leaderboard sources
+    const mergeAllPlayerData = (): Map<string, PlayerStats> => {
+      const playerMap = new Map<string, PlayerStats>();
+      
+      // Helper function to merge player data with priority-based field selection
+      const mergePlayer = (uuid: string, newData: PlayerStats) => {
+        const existing = playerMap.get(uuid);
+        if (!existing) {
+          playerMap.set(uuid, { ...newData });
+          return;
+        }
+        
+        // Merge with intelligent field prioritization
+        const merged: PlayerStats = {
+          uuid: existing.uuid,
+          name: existing.name,
+          // Always use the best available data for each field
+          playtime: Math.max(existing.playtime || 0, newData.playtime || 0),
+          sessions: Math.max(existing.sessions || 0, newData.sessions || 0),
+          kills: {
+            mob: Math.max(existing.kills.mob || 0, newData.kills.mob || 0),
+            player: Math.max(existing.kills.player || 0, newData.kills.player || 0)
+          },
+          deaths: Math.max(existing.deaths || 0, newData.deaths || 0),
+          afkTime: Math.max(existing.afkTime || 0, newData.afkTime || 0),
+          avgSessionLength: Math.max(existing.avgSessionLength || 0, newData.avgSessionLength || 0),
+          activityScore: Math.max(existing.activityScore || 0, newData.activityScore || 0),
+          // Use most recent timestamps
+          lastSeen: new Date(existing.lastSeen).getTime() > new Date(newData.lastSeen).getTime() ? 
+                   existing.lastSeen : newData.lastSeen,
+          joinDate: new Date(existing.joinDate).getTime() < new Date(newData.joinDate).getTime() ? 
+                   existing.joinDate : newData.joinDate
+        };
+        
+        playerMap.set(uuid, merged);
+      };
+      
+      // Merge data from all leaderboard sources
+      data.mostActive.forEach(player => mergePlayer(player.uuid, player));
+      data.topKillers.forEach(player => mergePlayer(player.uuid, player));
+      data.mostDeaths.forEach(player => mergePlayer(player.uuid, player));
+      data.longestSessions.forEach(player => mergePlayer(player.uuid, player));
+      
+      return playerMap;
+    };
+    
+    const completePlayerData = mergeAllPlayerData();
+    const allPlayers = Array.from(completePlayerData.values());
     
     let result: PlayerStats[];
     switch (activeTab) {
       case 'active': 
-        // For active players, show all players but sort by playtime (then by join date)
-        result = [...data.mostActive].sort((a, b) => {
-          if (b.playtime !== a.playtime) return b.playtime - a.playtime;
-          return new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime();
-        });
+        // Sort by activity score (if available) then by playtime
+        result = allPlayers
+          .filter(p => p.playtime > 0)
+          .sort((a, b) => {
+            const scoreA = a.activityScore || a.playtime;
+            const scoreB = b.activityScore || b.playtime;
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            return new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime();
+          });
         break;
       case 'killers': 
-        // Merge killer data with active player data to get complete stats
-        result = data.topKillers
-          .filter(killer => (killer.kills.mob + killer.kills.player) > 0)
-          .map(killer => {
-            const activePlayer = activePlayersMap.get(killer.uuid);
-            if (activePlayer) {
-              // Merge the data, prioritizing the killer's kill stats
-              return {
-                ...activePlayer,
-                kills: killer.kills, // Use kill data from topKillers
-                lastSeen: activePlayer.lastSeen || killer.lastSeen,
-                playtime: activePlayer.playtime || 0,
-                sessions: activePlayer.sessions || 0,
-                deaths: activePlayer.deaths || killer.deaths,
-                afkTime: activePlayer.afkTime || killer.afkTime,
-                daysActive: activePlayer.daysActive || killer.daysActive
-              };
-            }
-            return killer;
-          })
+        result = allPlayers
+          .filter(p => (p.kills.mob + p.kills.player) > 0)
           .sort((a, b) => (b.kills.mob + b.kills.player) - (a.kills.mob + a.kills.player));
         break;
       case 'sessions': 
-        // For sessions, use longest sessions if available, otherwise filter active players
-        result = data.longestSessions.length > 0 ? data.longestSessions :
-          data.mostActive.filter(p => p.sessions > 0).sort((a, b) => b.sessions - a.sessions);
+        result = allPlayers
+          .filter(p => p.sessions > 0)
+          .sort((a, b) => {
+            if (b.sessions !== a.sessions) return b.sessions - a.sessions;
+            return b.playtime - a.playtime; // Secondary sort by playtime
+          });
         break;
       case 'deaths':
-        // Merge deaths data with active player data to get complete stats
-        result = data.mostDeaths.length > 0 ? 
-          data.mostDeaths
-            .filter(deathPlayer => deathPlayer.deaths > 0)
-            .map(deathPlayer => {
-              const activePlayer = activePlayersMap.get(deathPlayer.uuid);
-              if (activePlayer) {
-                // Merge the data, prioritizing the death player's death stats
-                return {
-                  ...activePlayer,
-                  deaths: deathPlayer.deaths, // Use death data from mostDeaths
-                  lastSeen: activePlayer.lastSeen || deathPlayer.lastSeen,
-                  playtime: activePlayer.playtime || 0,
-                  sessions: activePlayer.sessions || deathPlayer.sessions,
-                  kills: activePlayer.kills || deathPlayer.kills,
-                  afkTime: activePlayer.afkTime || deathPlayer.afkTime,
-                  daysActive: activePlayer.daysActive || deathPlayer.daysActive
-                };
-              }
-              return deathPlayer;
-            })
-            .sort((a, b) => b.deaths - a.deaths) :
-          data.mostActive.filter(p => p.deaths > 0).sort((a, b) => b.deaths - a.deaths);
+        result = allPlayers
+          .filter(p => p.deaths > 0)
+          .sort((a, b) => b.deaths - a.deaths);
         break;
       default: 
         result = [];
     }
+    
     console.log(`getActiveData for tab "${activeTab}":`, result?.length || 0, 'players');
+    console.log('Sample merged player data:', result[0]);
     return result || [];
   };
 
@@ -370,13 +384,13 @@ export default function Leaderboards() {
               <div style={{ 
                 fontSize: '16px', 
                 fontWeight: '600',
-                color: (player.daysActive || 0) > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
+                color: (player.avgSessionLength || 0) > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
                 fontFamily: 'Inter, sans-serif'
               }}>
-                {player.daysActive || 0}
+                {player.avgSessionLength || 0}m
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
-                Days Active
+                Avg Session
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>

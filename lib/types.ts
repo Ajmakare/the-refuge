@@ -17,7 +17,7 @@ export interface PlayerStats {
   creativeTime?: number;
   adventureTime?: number;
   afkTime?: number;
-  daysActive?: number;
+  avgSessionLength?: number; // Average session length in minutes
   activityScore?: number; // Internal activity calculation for sorting
 }
 

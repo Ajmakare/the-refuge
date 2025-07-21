@@ -689,7 +689,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           SUM(COALESCE(s.afk_time, 0)) as afk_time,
           p.registered as join_date,
           MAX(s.${columns.sessionEnd}) as last_seen,
-          CAST((julianday('now') - julianday(p.registered/1000, 'unixepoch')) AS INTEGER) as days_active,
+          CAST(AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) / 60000 AS INTEGER) as avg_session_length_minutes,
           -- Calculate activity score considering multiple factors
           CAST(
             -- Base active time (total playtime - afk time, minimum 0)
@@ -752,7 +752,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: row.mob_kills || 0, player: 0 },
             deaths: 0,
             afkTime: row.afk_time || 0,
-            daysActive: row.days_active || 0,
+            avgSessionLength: row.avg_session_length_minutes || 0,
             activityScore: row.activity_score || 0, // Internal scoring metric
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
@@ -898,8 +898,9 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
     checkComplete();
   }
 
-  // Query 3: Longest Sessions (simplified)
+  // Query 3: Longest Sessions - works with both summary and individual session tables
   if (tables.players && columns.playtime && columns.sessions) {
+    // Summary table approach (plan_sessions_summary)
     const sessionsQuery = `
       SELECT 
         p.uuid, p.name, p.registered as join_date,
@@ -929,7 +930,47 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           kills: { mob: 0, player: 0 },
           deaths: 0,
           afkTime: 0,
-          daysActive: 0,
+          avgSessionLength: Math.round(row.avg_session_length / 60000) || 0, // Convert to minutes
+          lastSeen: new Date(row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else if (tables.sessions && columns.sessionStart && columns.sessionEnd && columns.userId) {
+    // Individual session records approach (plan_sessions)
+    console.log('📊 Calculating longest average sessions from individual session records...');
+    const longestSessionsQuery = `
+      SELECT 
+        p.uuid,
+        p.name,
+        p.registered as join_date,
+        SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as total_playtime,
+        COUNT(s.id) as total_sessions,
+        AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as avg_session_length,
+        SUM(COALESCE(s.afk_time, 0)) as total_afk_time
+      FROM ${tables.players} p
+      LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+      GROUP BY p.uuid, p.name, p.registered
+      HAVING total_sessions > 0
+      ORDER BY avg_session_length DESC
+      LIMIT ?
+    `;
+
+    db.all(longestSessionsQuery, [CONFIG.limits.longestSessions], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying longest sessions from individual records:', err.message);
+      } else {
+        console.log(`🔍 Longest Sessions query returned ${rows.length} rows`);
+        leaderboardData.longestSessions = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: row.total_playtime || 0,
+          sessions: row.total_sessions || 0,
+          kills: { mob: 0, player: 0 },
+          deaths: 0,
+          afkTime: row.total_afk_time || 0,
+          avgSessionLength: Math.round((row.avg_session_length || 0) / 60000), // Convert to minutes
           lastSeen: new Date(row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));
@@ -937,7 +978,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
       checkComplete();
     });
   } else {
-    console.log('⚠️  Skipping Longest Sessions query - missing required columns');
+    console.log('⚠️  Skipping Longest Sessions query - missing required tables/columns');
     checkComplete();
   }
 
