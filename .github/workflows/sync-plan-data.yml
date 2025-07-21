@@ -12,6 +12,9 @@ on:
         default: 'false'
         type: boolean
 
+permissions:
+  contents: write  # Allow the action to write to the repository
+
 jobs:
   sync-data:
     runs-on: ubuntu-latest
@@ -89,9 +92,14 @@ jobs:
     
     - name: Commit and push changes
       if: steps.changes.outputs.changes == 'true' || github.event.inputs.force_sync == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action - PLAN Sync"
+        
+        # Configure git to use the token for authentication
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
         
         git add public/data/leaderboards.json
         
