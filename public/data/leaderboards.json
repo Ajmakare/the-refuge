@@ -3,49 +3,49 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 92507795,
-      "sessions": 22,
+      "playtime": 94732567,
+      "sessions": 23,
       "kills": {
-        "mob": 128,
+        "mob": 184,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 2231081,
-      "avgSessionLength": 70,
-      "activityScore": 75101371,
-      "lastSeen": "2025-07-21T07:07:13.211Z",
+      "avgSessionLength": 68,
+      "activityScore": 76881188,
+      "lastSeen": "2025-07-21T20:23:56.897Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
     },
     {
       "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
       "name": "McChickenribs",
-      "playtime": 76535228,
-      "sessions": 16,
+      "playtime": 83945893,
+      "sessions": 17,
       "kills": {
-        "mob": 629,
+        "mob": 862,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 79,
-      "activityScore": 64108182,
-      "lastSeen": "2025-07-21T09:36:11.110Z",
+      "avgSessionLength": 82,
+      "activityScore": 70036714,
+      "lastSeen": "2025-07-21T20:22:14.845Z",
       "joinDate": "2025-07-17T21:09:11.671Z"
     },
     {
       "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
       "name": "EnderCube",
-      "playtime": 77341131,
-      "sessions": 16,
+      "playtime": 79035568,
+      "sessions": 18,
       "kills": {
         "mob": 218,
         "player": 0
       },
       "deaths": 0,
-      "afkTime": 2874955,
-      "avgSessionLength": 80,
-      "activityScore": 62452940,
-      "lastSeen": "2025-07-21T18:54:59.543Z",
+      "afkTime": 3143612,
+      "avgSessionLength": 73,
+      "activityScore": 63593564,
+      "lastSeen": "2025-07-21T20:17:43.441Z",
       "joinDate": "2025-07-17T21:04:41.308Z"
     },
     {
@@ -83,17 +83,17 @@
     {
       "uuid": "1bd7d04a-ebb3-4ee7-b687-c87b48db9071",
       "name": "OgLmx",
-      "playtime": 66137938,
-      "sessions": 23,
+      "playtime": 67172003,
+      "sessions": 24,
       "kills": {
-        "mob": 2389,
+        "mob": 2390,
         "player": 0
       },
       "deaths": 0,
-      "afkTime": 8957982,
-      "avgSessionLength": 47,
-      "activityScore": 48623964,
-      "lastSeen": "2025-07-21T15:47:36.341Z",
+      "afkTime": 9224812,
+      "avgSessionLength": 46,
+      "activityScore": 49237752,
+      "lastSeen": "2025-07-21T20:37:28.342Z",
       "joinDate": "2025-07-17T21:04:24.557Z"
     },
     {
@@ -293,7 +293,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 2389,
+        "mob": 2390,
         "player": 4
       },
       "deaths": 0,
@@ -316,6 +316,21 @@
       "daysActive": 0,
       "lastSeen": "2025-07-17T23:19:21.241Z",
       "joinDate": "2025-07-17T23:19:21.241Z"
+    },
+    {
+      "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
+      "name": "McChickenribs",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 862,
+        "player": 0
+      },
+      "deaths": 0,
+      "afkTime": 0,
+      "daysActive": 0,
+      "lastSeen": "2025-07-17T21:09:11.671Z",
+      "joinDate": "2025-07-17T21:09:11.671Z"
     },
     {
       "uuid": "0a5e76cc-d1a3-4b63-9551-801739eb672f",
@@ -376,21 +391,6 @@
       "daysActive": 0,
       "lastSeen": "2025-07-17T21:06:31.763Z",
       "joinDate": "2025-07-17T21:06:31.763Z"
-    },
-    {
-      "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
-      "name": "McChickenribs",
-      "playtime": 0,
-      "sessions": 0,
-      "kills": {
-        "mob": 629,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "daysActive": 0,
-      "lastSeen": "2025-07-17T21:09:11.671Z",
-      "joinDate": "2025-07-17T21:09:11.671Z"
     },
     {
       "uuid": "65b52db0-eb88-4f77-b348-497ec5aebec5",
@@ -532,15 +532,15 @@
     {
       "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
       "name": "BroZGold",
-      "playtime": 92507795,
-      "sessions": 22,
+      "playtime": 94732567,
+      "sessions": 23,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 2231081,
-      "avgSessionLength": 70,
+      "avgSessionLength": 69,
       "lastSeen": "2025-07-18T00:15:11.606Z",
       "joinDate": "2025-07-18T00:15:11.606Z"
     },
@@ -575,34 +575,34 @@
       "joinDate": "2025-07-17T22:46:47.650Z"
     },
     {
-      "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
-      "name": "EnderCube",
-      "playtime": 77341131,
-      "sessions": 16,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 2874955,
-      "avgSessionLength": 81,
-      "lastSeen": "2025-07-17T21:04:41.308Z",
-      "joinDate": "2025-07-17T21:04:41.308Z"
-    },
-    {
       "uuid": "b665c1c3-73b7-4b58-afc1-1bd521a929e2",
       "name": "McChickenribs",
-      "playtime": 76535228,
-      "sessions": 16,
+      "playtime": 83945893,
+      "sessions": 17,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 80,
+      "avgSessionLength": 82,
       "lastSeen": "2025-07-17T21:09:11.671Z",
       "joinDate": "2025-07-17T21:09:11.671Z"
+    },
+    {
+      "uuid": "f58ffb36-53d1-4c34-a5e5-c1c7e0b455f9",
+      "name": "EnderCube",
+      "playtime": 79035568,
+      "sessions": 18,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "afkTime": 3143612,
+      "avgSessionLength": 73,
+      "lastSeen": "2025-07-17T21:04:41.308Z",
+      "joinDate": "2025-07-17T21:04:41.308Z"
     },
     {
       "uuid": "10bd2c53-d214-4b53-81df-8d883f95521a",
@@ -696,5 +696,5 @@
     }
   ],
   "mostDeaths": [],
-  "lastUpdated": "2025-07-21T20:13:18.774Z"
+  "lastUpdated": "2025-07-21T20:42:37.619Z"
 }
