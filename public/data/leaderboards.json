@@ -106,6 +106,21 @@
       "joinDate": "2025-07-17T21:58:56.221Z"
     },
     {
+      "uuid": "ef78e3c2-2859-4b12-9478-23323df75d85",
+      "name": "Mattaroni",
+      "playtime": 47704459,
+      "sessions": 6,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 0,
+      "blocksPlaced": 0,
+      "blocksBroken": 0,
+      "lastSeen": "2025-07-21T05:34:31.521Z",
+      "joinDate": "2025-07-18T02:16:22.829Z"
+    },
+    {
       "uuid": "818fbc02-aff0-4e37-9634-2df8825987e9",
       "name": "DeliciousChili1",
       "playtime": 44264805,
@@ -134,21 +149,6 @@
       "blocksBroken": 0,
       "lastSeen": "2025-07-20T22:58:10.178Z",
       "joinDate": "2025-07-17T21:29:15.973Z"
-    },
-    {
-      "uuid": "ef78e3c2-2859-4b12-9478-23323df75d85",
-      "name": "Mattaroni",
-      "playtime": 38343355,
-      "sessions": 5,
-      "kills": {
-        "mob": 0,
-        "player": 0
-      },
-      "deaths": 0,
-      "blocksPlaced": 0,
-      "blocksBroken": 0,
-      "lastSeen": "2025-07-21T02:57:10.116Z",
-      "joinDate": "2025-07-18T02:16:22.829Z"
     }
   ],
   "topKillers": [
@@ -260,5 +260,5 @@
   ],
   "longestSessions": [],
   "topBuilders": [],
-  "lastUpdated": "2025-07-21T05:27:40.515Z"
+  "lastUpdated": "2025-07-21T05:50:33.522Z"
 }
