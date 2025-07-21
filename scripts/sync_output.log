@@ -1,0 +1,11 @@
+
+> plan-data-sync@1.0.0 sync
+> node sync-plan-data.js
+
+🚀 Starting PLAN data sync...
+⬇️  Downloading SQLite file from server...
+🔍 Validating connection settings...
+📡 Host: your-server.ggservers.com
+🔌 Port: 21 (number)
+👤 User: your-username
+❌ Error during sync: ❌ GGSERVERS_HOST not configured. Please set your actual GGServers hostname.

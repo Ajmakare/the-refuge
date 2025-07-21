@@ -493,6 +493,14 @@ function detectTableScheme(tableNames) {
         kills: 'plan_kills',
         deaths: 'plan_deaths', 
         actions: 'plan_actions'
+      },
+      columns: {
+        playtime: 'playtime_ms',
+        sessions: 'session_count',
+        lastSeen: 'last_seen',
+        registered: 'registered',
+        mobKills: 'mob_kills',
+        playerKills: 'player_kills'
       }
     },
     {
@@ -546,6 +554,175 @@ function detectTableScheme(tableNames) {
 }
 
 /**
+ * Detect column structure for tables
+ */
+function detectColumnStructure(db, tables, callback) {
+  const columnMapping = {};
+  
+  // Check columns in sessions table (most variable between versions)
+  if (tables.sessions) {
+    db.all(`PRAGMA table_info(${tables.sessions})`, [], (err, columns) => {
+      if (err || !columns) {
+        console.log('⚠️  Could not detect columns in sessions table');
+        callback({});
+        return;
+      }
+      
+      const columnNames = columns.map(col => col.name.toLowerCase());
+      console.log(`🔍 ${tables.sessions} columns:`, columnNames.join(', '));
+      
+      // Map common column variations
+      columnMapping.playtime = columnNames.includes('playtime') ? 'playtime' : 
+                              columnNames.includes('playtime_ms') ? 'playtime_ms' :
+                              columnNames.includes('time_played') ? 'time_played' : null;
+      
+      columnMapping.sessions = columnNames.includes('session_count') ? 'session_count' :
+                              columnNames.includes('sessions') ? 'sessions' : null;
+      
+      columnMapping.lastSeen = columnNames.includes('last_seen') ? 'last_seen' :
+                              columnNames.includes('last_login') ? 'last_login' : null;
+      
+      callback(columnMapping);
+    });
+  } else {
+    callback({});
+  }
+}
+
+/**
+ * Run queries with column mapping
+ */
+function runQueriesWithColumns(db, tables, columns, leaderboardData, checkComplete) {
+  // Query 1: Most Active Players  
+  if (tables.players && tables.sessions && columns.playtime) {
+    const activePlayersQuery = `
+      SELECT 
+        p.uuid,
+        p.name,
+        COALESCE(s.${columns.playtime}, 0) as playtime,
+        ${columns.sessions ? `COALESCE(s.${columns.sessions}, 0) as sessions,` : '0 as sessions,'}
+        p.registered as join_date,
+        ${columns.lastSeen ? `COALESCE(s.${columns.lastSeen}, p.registered) as last_seen` : 'p.registered as last_seen'}
+      FROM ${tables.players} p
+      LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid
+      WHERE COALESCE(s.${columns.playtime}, 0) > 0
+      ORDER BY COALESCE(s.${columns.playtime}, 0) DESC
+      LIMIT ?
+    `;
+
+    db.all(activePlayersQuery, [CONFIG.limits.mostActive], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying most active players:', err.message);
+      } else {
+        console.log(`🔍 Most Active query returned ${rows.length} rows`);
+        leaderboardData.mostActive = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: row.playtime || 0,
+          sessions: row.sessions || 0,
+          kills: { mob: 0, player: 0 },
+          deaths: 0,
+          blocksPlaced: 0,
+          blocksBroken: 0,
+          lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else {
+    console.log('⚠️  Skipping Most Active query - missing required columns');
+    checkComplete();
+  }
+
+  // Query 2: Top Killers
+  if (tables.players && tables.kills) {
+    const killersQuery = `
+      SELECT 
+        p.uuid, p.name, p.registered as join_date,
+        COALESCE(k.mob_kills, 0) as mob_kills,
+        COALESCE(k.player_kills, 0) as player_kills
+      FROM ${tables.players} p
+      LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid
+      WHERE COALESCE(k.mob_kills, 0) > 0
+      ORDER BY COALESCE(k.mob_kills, 0) DESC
+      LIMIT ?
+    `;
+
+    db.all(killersQuery, [CONFIG.limits.topKillers], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying top killers:', err.message);
+      } else {
+        console.log(`🔍 Top Killers query returned ${rows.length} rows`);
+        leaderboardData.topKillers = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: 0,
+          sessions: 0,
+          kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
+          deaths: 0,
+          blocksPlaced: 0,
+          blocksBroken: 0,
+          lastSeen: new Date(row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else {
+    console.log('⚠️  Skipping Top Killers query - missing required tables');
+    checkComplete();
+  }
+
+  // Query 3: Longest Sessions (simplified)
+  if (tables.players && columns.playtime && columns.sessions) {
+    const sessionsQuery = `
+      SELECT 
+        p.uuid, p.name, p.registered as join_date,
+        COALESCE(s.${columns.playtime}, 0) as playtime,
+        COALESCE(s.${columns.sessions}, 0) as sessions,
+        CASE 
+          WHEN COALESCE(s.${columns.sessions}, 0) > 0 THEN COALESCE(s.${columns.playtime}, 0) / COALESCE(s.${columns.sessions}, 1)
+          ELSE 0 
+        END as avg_session_length
+      FROM ${tables.players} p
+      LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid
+      WHERE COALESCE(s.${columns.sessions}, 0) > 0
+      ORDER BY avg_session_length DESC
+      LIMIT ?
+    `;
+
+    db.all(sessionsQuery, [CONFIG.limits.longestSessions], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying longest sessions:', err.message);
+      } else {
+        console.log(`🔍 Longest Sessions query returned ${rows.length} rows`);
+        leaderboardData.longestSessions = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: row.playtime || 0,
+          sessions: row.sessions || 0,
+          kills: { mob: 0, player: 0 },
+          deaths: 0,
+          blocksPlaced: 0,
+          blocksBroken: 0,
+          lastSeen: new Date(row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
+      checkComplete();
+    });
+  } else {
+    console.log('⚠️  Skipping Longest Sessions query - missing required columns');
+    checkComplete();
+  }
+
+  // Query 4: Top Builders (skip if no actions table)
+  console.log('⚠️  Skipping Top Builders query - missing required tables');
+  checkComplete();
+}
+
+/**
  * Run queries with detected table scheme
  */
 function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
@@ -567,153 +744,12 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
 
   // Build dynamic queries based on available tables
   const tables = scheme.tables;
-
-  // Query 1: Most Active Players (by playtime)
-  if (tables.players && tables.sessions) {
-    const activePlayersQuery = `
-      SELECT 
-        p.uuid,
-        p.name,
-        s.playtime,
-        s.session_count as sessions,
-        ${tables.kills ? 'COALESCE(k.mob_kills, 0) as mob_kills,' : '0 as mob_kills,'}
-        ${tables.kills ? 'COALESCE(k.player_kills, 0) as player_kills,' : '0 as player_kills,'}
-        ${tables.deaths ? 'COALESCE(d.deaths, 0) as deaths,' : '0 as deaths,'}
-        ${tables.actions ? 'COALESCE(a.blocks_placed, 0) as blocks_placed,' : '0 as blocks_placed,'}
-        ${tables.actions ? 'COALESCE(a.blocks_broken, 0) as blocks_broken,' : '0 as blocks_broken,'}
-        s.last_seen,
-        p.registered as join_date
-      FROM ${tables.players} p
-      LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid
-      ${tables.kills ? `LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid` : ''}
-      ${tables.deaths ? `LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid` : ''}
-      ${tables.actions ? `LEFT JOIN ${tables.actions} a ON p.uuid = a.uuid` : ''}
-      WHERE s.playtime > 0
-      ORDER BY s.playtime DESC
-      LIMIT ?
-    `;
-
-    db.all(activePlayersQuery, [CONFIG.limits.mostActive], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying most active players:', err.message);
-      } else {
-        console.log(`🔍 Most Active query returned ${rows.length} rows`);
-        leaderboardData.mostActive = rows.map(formatPlayerRow);
-      }
-      checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Most Active query - missing required tables');
-    checkComplete();
-  }
-
-  // Query 2: Top Killers (by mob kills) 
-  if (tables.players && tables.kills) {
-    const killersQuery = `
-      SELECT 
-        p.uuid, p.name,
-        ${tables.sessions ? 's.playtime, s.session_count as sessions,' : '0 as playtime, 0 as sessions,'}
-        COALESCE(k.mob_kills, 0) as mob_kills,
-        COALESCE(k.player_kills, 0) as player_kills,
-        ${tables.deaths ? 'COALESCE(d.deaths, 0) as deaths,' : '0 as deaths,'}
-        ${tables.actions ? 'COALESCE(a.blocks_placed, 0) as blocks_placed,' : '0 as blocks_placed,'}
-        ${tables.actions ? 'COALESCE(a.blocks_broken, 0) as blocks_broken,' : '0 as blocks_broken,'}
-        ${tables.sessions ? 's.last_seen,' : 'NULL as last_seen,'}
-        p.registered as join_date
-      FROM ${tables.players} p
-      ${tables.sessions ? `LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid` : ''}
-      LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid
-      ${tables.deaths ? `LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid` : ''}
-      ${tables.actions ? `LEFT JOIN ${tables.actions} a ON p.uuid = a.uuid` : ''}
-      WHERE k.mob_kills > 0
-      ORDER BY k.mob_kills DESC
-      LIMIT ?
-    `;
-
-    db.all(killersQuery, [CONFIG.limits.topKillers], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying top killers:', err.message);
-      } else {
-        console.log(`🔍 Top Killers query returned ${rows.length} rows`);
-        leaderboardData.topKillers = rows.map(formatPlayerRow);
-      }
-      checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Top Killers query - missing required tables');
-    checkComplete();
-  }
-
-  // Query 3: Longest Sessions (by average session length)
-  if (tables.players && tables.sessions) {
-    const sessionsQuery = `
-      SELECT 
-        p.uuid, p.name, s.playtime, s.session_count as sessions,
-        ${tables.kills ? 'COALESCE(k.mob_kills, 0) as mob_kills,' : '0 as mob_kills,'}
-        ${tables.kills ? 'COALESCE(k.player_kills, 0) as player_kills,' : '0 as player_kills,'}
-        ${tables.deaths ? 'COALESCE(d.deaths, 0) as deaths,' : '0 as deaths,'}
-        ${tables.actions ? 'COALESCE(a.blocks_placed, 0) as blocks_placed,' : '0 as blocks_placed,'}
-        ${tables.actions ? 'COALESCE(a.blocks_broken, 0) as blocks_broken,' : '0 as blocks_broken,'}
-        s.last_seen, p.registered as join_date,
-        (s.playtime / s.session_count) as avg_session_length
-      FROM ${tables.players} p
-      LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid
-      ${tables.kills ? `LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid` : ''}
-      ${tables.deaths ? `LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid` : ''}
-      ${tables.actions ? `LEFT JOIN ${tables.actions} a ON p.uuid = a.uuid` : ''}
-      WHERE s.session_count > 0
-      ORDER BY avg_session_length DESC
-      LIMIT ?
-    `;
-
-    db.all(sessionsQuery, [CONFIG.limits.longestSessions], (err, rows) => {
-      if (err) {
-        console.error('Error querying longest sessions:', err);
-      } else {
-        leaderboardData.longestSessions = rows.map(formatPlayerRow);
-      }
-      checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Longest Sessions query - missing required tables');
-    checkComplete();
-  }
-
-  // Query 4: Top Builders (by blocks placed)
-  if (tables.players && tables.actions) {
-    const buildersQuery = `
-      SELECT 
-        p.uuid, p.name,
-        ${tables.sessions ? 's.playtime, s.session_count as sessions,' : '0 as playtime, 0 as sessions,'}
-        ${tables.kills ? 'COALESCE(k.mob_kills, 0) as mob_kills,' : '0 as mob_kills,'}
-        ${tables.kills ? 'COALESCE(k.player_kills, 0) as player_kills,' : '0 as player_kills,'}
-        ${tables.deaths ? 'COALESCE(d.deaths, 0) as deaths,' : '0 as deaths,'}
-        COALESCE(a.blocks_placed, 0) as blocks_placed,
-        COALESCE(a.blocks_broken, 0) as blocks_broken,
-        ${tables.sessions ? 's.last_seen,' : 'NULL as last_seen,'}
-        p.registered as join_date
-      FROM ${tables.players} p
-      ${tables.sessions ? `LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid` : ''}
-      ${tables.kills ? `LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid` : ''}
-      ${tables.deaths ? `LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid` : ''}
-      LEFT JOIN ${tables.actions} a ON p.uuid = a.uuid
-      WHERE a.blocks_placed > 0
-      ORDER BY a.blocks_placed DESC
-      LIMIT ?
-    `;
-
-    db.all(buildersQuery, [CONFIG.limits.topBuilders], (err, rows) => {
-      if (err) {
-        console.error('Error querying top builders:', err);
-      } else {
-        leaderboardData.topBuilders = rows.map(formatPlayerRow);
-      }
-      checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Top Builders query - missing required tables');
-    checkComplete();
-  }
+  
+  // Detect column structure for key tables
+  detectColumnStructure(db, tables, (columnMapping) => {
+    console.log('🔧 Detected column mapping:', JSON.stringify(columnMapping, null, 2));
+    runQueriesWithColumns(db, tables, columnMapping, leaderboardData, checkComplete);
+  });
 }
 
 /**
