@@ -67,17 +67,17 @@
     {
       "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
       "name": "Pentatope",
-      "playtime": 61156790,
-      "sessions": 10,
+      "playtime": 63052474,
+      "sessions": 11,
       "kills": {
-        "mob": 2002,
+        "mob": 2011,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 101,
-      "activityScore": 51805432,
-      "lastSeen": "2025-07-21T05:49:52.402Z",
+      "avgSessionLength": 95,
+      "activityScore": 53321979,
+      "lastSeen": "2025-07-21T21:43:18.452Z",
       "joinDate": "2025-07-17T23:19:21.241Z"
     },
     {
@@ -163,18 +163,34 @@
     {
       "uuid": "f42e00c8-774e-464d-a543-af11993b2983",
       "name": "Kage45",
-      "playtime": 34723857,
-      "sessions": 24,
+      "playtime": 36804381,
+      "sessions": 29,
       "kills": {
-        "mob": 218,
+        "mob": 229,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 24,
-      "activityScore": 30659085,
-      "lastSeen": "2025-07-21T21:39:52.898Z",
+      "avgSessionLength": 21,
+      "activityScore": 32323504,
+      "lastSeen": "2025-07-21T22:20:02.445Z",
       "joinDate": "2025-07-17T22:03:11.334Z"
+    },
+    {
+      "uuid": "0c487333-338c-4068-b08c-d663ecea3486",
+      "name": "willisnothere",
+      "playtime": 64682466,
+      "sessions": 14,
+      "kills": {
+        "mob": 334,
+        "player": 0
+      },
+      "deaths": 0,
+      "afkTime": 29216117,
+      "avgSessionLength": 77,
+      "activityScore": 29813079,
+      "lastSeen": "2025-07-21T22:12:32.962Z",
+      "joinDate": "2025-07-17T22:46:47.650Z"
     },
     {
       "uuid": "0a5e76cc-d1a3-4b63-9551-801739eb672f",
@@ -223,22 +239,6 @@
       "activityScore": 26607019,
       "lastSeen": "2025-07-20T23:59:03.732Z",
       "joinDate": "2025-07-17T21:31:29.635Z"
-    },
-    {
-      "uuid": "c25e5dd7-1270-427e-8967-e7dc926844e3",
-      "name": "Madcards",
-      "playtime": 27334783,
-      "sessions": 14,
-      "kills": {
-        "mob": 3045,
-        "player": 0
-      },
-      "deaths": 0,
-      "afkTime": 0,
-      "avgSessionLength": 32,
-      "activityScore": 24747826,
-      "lastSeen": "2025-07-21T00:40:58.457Z",
-      "joinDate": "2025-07-17T21:10:27.723Z"
     }
   ],
   "topKillers": [
@@ -308,7 +308,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 2002,
+        "mob": 2011,
         "player": 1
       },
       "deaths": 0,
@@ -443,7 +443,7 @@
       "playtime": 0,
       "sessions": 0,
       "kills": {
-        "mob": 218,
+        "mob": 229,
         "player": 2
       },
       "deaths": 0,
@@ -547,30 +547,30 @@
     {
       "uuid": "4b7b8b83-65c0-4a18-85d5-173e7f2ad593",
       "name": "Pentatope",
-      "playtime": 61156790,
-      "sessions": 10,
+      "playtime": 63052474,
+      "sessions": 11,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
       "afkTime": 0,
-      "avgSessionLength": 102,
+      "avgSessionLength": 96,
       "lastSeen": "2025-07-17T23:19:21.241Z",
       "joinDate": "2025-07-17T23:19:21.241Z"
     },
     {
       "uuid": "0c487333-338c-4068-b08c-d663ecea3486",
       "name": "willisnothere",
-      "playtime": 54890175,
-      "sessions": 10,
+      "playtime": 64682466,
+      "sessions": 14,
       "kills": {
         "mob": 0,
         "player": 0
       },
       "deaths": 0,
-      "afkTime": 26637332,
-      "avgSessionLength": 91,
+      "afkTime": 29216117,
+      "avgSessionLength": 77,
       "lastSeen": "2025-07-17T22:46:47.650Z",
       "joinDate": "2025-07-17T22:46:47.650Z"
     },
@@ -696,5 +696,5 @@
     }
   ],
   "mostDeaths": [],
-  "lastUpdated": "2025-07-21T22:12:24.719Z"
+  "lastUpdated": "2025-07-21T22:43:18.579Z"
 }
