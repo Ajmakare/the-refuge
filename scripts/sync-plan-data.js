@@ -25,10 +25,9 @@ const CONFIG = {
   
   // Data limits
   limits: {
-    mostActive: 15,
-    topKillers: 15,
-    longestSessions: 15,
-    mostDeaths: 15,
+    mostActive: 10,
+    topKillers: 10,
+    mostDeaths: 10,
   }
 };
 
@@ -908,100 +907,9 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
     checkComplete();
   }
 
-  // Query 3: Longest Sessions - works with both summary and individual session tables
-  if (tables.players && columns.playtime && columns.sessions) {
-    // Summary table approach (plan_sessions_summary)
-    const sessionsQuery = `
-      SELECT 
-        p.uuid, p.name, p.registered as join_date,
-        COALESCE(s.${columns.playtime}, 0) as playtime,
-        COALESCE(s.${columns.sessions}, 0) as sessions,
-        CASE 
-          WHEN COALESCE(s.${columns.sessions}, 0) > 0 THEN COALESCE(s.${columns.playtime}, 0) / COALESCE(s.${columns.sessions}, 1)
-          ELSE 0 
-        END as avg_session_length
-      FROM ${tables.players} p
-      LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid
-      WHERE COALESCE(s.${columns.sessions}, 0) > 0
-      ORDER BY avg_session_length DESC
-      LIMIT ?
-    `;
-
-    db.all(sessionsQuery, [CONFIG.limits.longestSessions], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying longest sessions:', err.message);
-      } else {
-        console.log(`🔍 Longest Sessions query returned ${rows.length} rows`);
-        leaderboardData.longestSessions = rows.map(row => ({
-          uuid: row.uuid,
-          name: row.name,
-          playtime: row.playtime || 0,
-          sessions: row.sessions || 0,
-          kills: { mob: 0, player: 0 },
-          deaths: 0,
-          afkTime: 0,
-          avgSessionLength: Math.round(row.avg_session_length / 60000) || 0, // Convert to minutes
-          lastSeen: new Date(row.join_date).toISOString(),
-          joinDate: new Date(row.join_date).toISOString()
-        }));
-      }
-      checkComplete();
-    });
-  } else if (tables.sessions && columns.sessionStart && columns.sessionEnd && columns.userId) {
-    // Individual session records approach (plan_sessions)
-    console.log('📊 Calculating longest sessions based on sustained play dedication...');
-    const longestSessionsQuery = `
-      SELECT 
-        p.uuid,
-        p.name,
-        p.registered as join_date,
-        SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as total_playtime,
-        COUNT(s.id) as total_sessions,
-        MAX(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as longest_single_session,
-        SUM(COALESCE(s.afk_time, 0)) as total_afk_time,
-        -- Calculate session dedication score (balanced approach)
-        CAST(
-          -- Longest single session (peak dedication) - 50% weight
-          MAX(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.5
-          -- Average session length (consistency matters) - 35% weight  
-          + AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.35
-          -- Recent activity bonus (active in last 14 days) - 15% weight
-          + CASE WHEN MAX(s.${columns.sessionEnd}) > (strftime('%s', 'now') - 1209600) * 1000
-                 THEN AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.15
-                 ELSE 0 END
-        AS INTEGER) as dedication_score
-      FROM ${tables.players} p
-      LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
-      GROUP BY p.uuid, p.name, p.registered
-      HAVING total_sessions > 0 AND longest_single_session > 600000
-      ORDER BY dedication_score DESC
-      LIMIT ?
-    `;
-
-    db.all(longestSessionsQuery, [CONFIG.limits.longestSessions], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying longest sessions from individual records:', err.message);
-      } else {
-        console.log(`🔍 Longest Sessions query returned ${rows.length} rows`);
-        leaderboardData.longestSessions = rows.map(row => ({
-          uuid: row.uuid,
-          name: row.name,
-          playtime: row.total_playtime || 0,
-          sessions: row.total_sessions || 0,
-          kills: { mob: 0, player: 0 },
-          deaths: 0,
-          afkTime: row.total_afk_time || 0,
-          avgSessionLength: Math.round((row.total_playtime || 0) / Math.max(1, row.total_sessions) / (60 * 1000)) || 0, // Average session length in minutes
-          lastSeen: new Date(row.join_date).toISOString(),
-          joinDate: new Date(row.join_date).toISOString()
-        }));
-      }
-      checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Longest Sessions query - missing required tables/columns');
-    checkComplete();
-  }
+  // Query 3: Longest Sessions - REMOVED per user request
+  console.log('⚠️  Longest Sessions leaderboard removed - skipping query');
+  checkComplete();
 
   // Query 4: Most Deaths - Extract from sessions table if available
   if (tables.players) {
@@ -1126,7 +1034,6 @@ function mergePlayerData(leaderboardData) {
   const allLeaderboards = [
     ...leaderboardData.mostActive,
     ...leaderboardData.topKillers, 
-    ...leaderboardData.longestSessions,
     ...leaderboardData.mostDeaths
   ];
   
@@ -1146,9 +1053,6 @@ function mergePlayerData(leaderboardData) {
   leaderboardData.topKillers = leaderboardData.topKillers.map(player => 
     playerMap.get(player.uuid));
     
-  leaderboardData.longestSessions = leaderboardData.longestSessions.map(player => 
-    ({ ...playerMap.get(player.uuid), avgSessionLength: player.avgSessionLength }));
-    
   leaderboardData.mostDeaths = leaderboardData.mostDeaths.map(player => 
     playerMap.get(player.uuid));
   
@@ -1160,7 +1064,7 @@ function mergePlayerData(leaderboardData) {
  */
 function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
   let completed = 0;
-  const queries = 4; // Reduced to 4 queries (removed builders)
+  const queries = 3; // Only 3 queries: mostActive, topKillers, mostDeaths
 
   function checkComplete() {
     completed++;
@@ -1173,7 +1077,6 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
       console.log('📊 Final leaderboard summary:');
       console.log(`   - Most Active: ${leaderboardData.mostActive.length} players`);
       console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
-      console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
       console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
       resolve(leaderboardData);
     }
@@ -1218,7 +1121,6 @@ async function extractPlayerStats() {
     const leaderboardData = {
       mostActive: [],
       topKillers: [],
-      longestSessions: [],
       mostDeaths: [],
       lastUpdated: new Date().toISOString()
     };
@@ -1288,7 +1190,6 @@ async function main() {
     console.log('📊 Statistics extracted:');
     console.log(`   - Most Active: ${leaderboardData.mostActive.length} players`);
     console.log(`   - Top Killers: ${leaderboardData.topKillers.length} players`);
-    console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
     console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
     
   } catch (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star, Target } from "lucide-react";
+import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
@@ -8,7 +8,7 @@ import { formatPlaytime, formatNumber, formatDate, formatDateTime } from "@/lib/
 
 export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
-  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'sessions' | 'deaths'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'deaths'>('active');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -116,7 +116,6 @@ export default function Leaderboards() {
       data.mostActive.forEach(player => mergePlayer(player.uuid, player));
       data.topKillers.forEach(player => mergePlayer(player.uuid, player));
       data.mostDeaths.forEach(player => mergePlayer(player.uuid, player));
-      data.longestSessions.forEach(player => mergePlayer(player.uuid, player));
       
       return playerMap;
     };
@@ -141,14 +140,6 @@ export default function Leaderboards() {
         result = allPlayers
           .filter(p => (p.kills.mob + p.kills.player) > 0)
           .sort((a, b) => (b.kills.mob + b.kills.player) - (a.kills.mob + a.kills.player));
-        break;
-      case 'sessions': 
-        result = allPlayers
-          .filter(p => p.sessions > 0)
-          .sort((a, b) => {
-            if (b.sessions !== a.sessions) return b.sessions - a.sessions;
-            return b.playtime - a.playtime; // Secondary sort by playtime
-          });
         break;
       case 'deaths':
         result = allPlayers
@@ -178,15 +169,9 @@ export default function Leaderboards() {
           title: 'Top Combat Players',
           description: 'Players with the most mob and PvP kills'
         };
-      case 'sessions': 
-        return { 
-          icon: <Target style={{ width: "20px", height: "20px" }} />, 
-          title: 'Longest Sessions',
-          description: 'Players who can sustain the longest continuous play sessions'
-        };
       case 'deaths':
         return {
-          icon: <Trophy style={{ width: "20px", height: "20px", color: "#ef4444" }} />,
+          icon: <Trophy style={{ width: "20px", height: "20px" }} />,
           title: 'Most Deaths',
           description: 'Players who have died the most (learning experiences!)'
         };
@@ -225,11 +210,6 @@ export default function Leaderboards() {
           return { 
             value: formatNumber(player.kills.mob + player.kills.player), 
             label: 'Total Kills' 
-          };
-        case 'sessions': 
-          return { 
-            value: player.sessions > 0 ? player.sessions.toString() : 'Starting', 
-            label: player.sessions > 0 ? 'Sessions' : 'Building History' 
           };
         case 'deaths':
           return {
@@ -574,7 +554,6 @@ export default function Leaderboards() {
               {[
                 { key: 'active' as const, label: 'Most Active' },
                 { key: 'killers' as const, label: 'Top Combat' },
-                { key: 'sessions' as const, label: 'Sessions' },
                 { key: 'deaths' as const, label: 'Most Deaths' },
               ].map(tab => {
                 const config = getTabConfig(tab.key);
@@ -663,22 +642,18 @@ export default function Leaderboards() {
                     }}>
                       <div style={{ fontSize: '48px', marginBottom: '16px' }}>
                         {activeTab === 'active' ? '⏱️' : 
-                         activeTab === 'killers' ? '⚔️' : 
-                         activeTab === 'sessions' ? '🎮' : '🏗️'}
+                         activeTab === 'killers' ? '⚔️' : '💀'}
                       </div>
                       <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: 'white' }}>
                         {activeTab === 'active' ? 'Players are joining!' : 
-                         activeTab === 'killers' ? 'No combat data yet' : 
-                         activeTab === 'sessions' ? 'Building session history' : 'No building data yet'}
+                         activeTab === 'killers' ? 'No combat data yet' : 'No death data yet'}
                       </h3>
                       <p style={{ fontSize: '16px', marginBottom: '8px' }}>
                         {activeTab === 'active' ? 
                           `${data?.mostActive?.length || 0} players have joined the server.` :
                          activeTab === 'killers' ? 
                           'Players haven\'t started battling mobs or each other yet.' :
-                         activeTab === 'sessions' ?
-                          'Players are building up their play session history.' :
-                          'Players haven\'t started building yet.'}
+                          'Players haven\'t died yet... they\'re playing it safe!'}
                       </p>
                       <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>
                         Data syncs automatically every 30 minutes as players are active.
