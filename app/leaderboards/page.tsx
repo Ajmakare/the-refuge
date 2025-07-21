@@ -8,7 +8,7 @@ import { formatPlaytime, formatNumber, formatDate } from "@/lib/utils";
 
 export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
-  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'sessions' | 'builders' | 'deaths' | 'ping' | 'survival' | 'creative'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'sessions' | 'builders' | 'deaths'>('active');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -118,21 +118,6 @@ export default function Leaderboards() {
         result = data.mostDeaths.length > 0 ? data.mostDeaths :
           data.mostActive.filter(p => p.deaths > 0).sort((a, b) => b.deaths - a.deaths);
         break;
-      case 'ping':
-        // Best ping leaderboard (lowest ping wins)
-        result = data.bestPing.length > 0 ? data.bestPing :
-          data.mostActive.filter(p => p.avgPing && p.avgPing > 0).sort((a, b) => (a.avgPing || 999) - (b.avgPing || 999));
-        break;
-      case 'survival':
-        // Survival time leaderboard
-        result = data.survivalTime.length > 0 ? data.survivalTime :
-          data.mostActive.filter(p => p.survivalTime && p.survivalTime > 0).sort((a, b) => (b.survivalTime || 0) - (a.survivalTime || 0));
-        break;
-      case 'creative':
-        // Creative masters leaderboard
-        result = data.creativeMasters.length > 0 ? data.creativeMasters :
-          data.mostActive.filter(p => p.creativeTime && p.creativeTime > 0).sort((a, b) => (b.creativeTime || 0) - (a.creativeTime || 0));
-        break;
       default: 
         result = [];
     }
@@ -171,24 +156,6 @@ export default function Leaderboards() {
           icon: <Trophy style={{ width: "20px", height: "20px", color: "#ef4444" }} />,
           title: 'Most Deaths',
           description: 'Players who have died the most (learning experiences!)'
-        };
-      case 'ping':
-        return {
-          icon: <BarChart3 style={{ width: "20px", height: "20px", color: "#10b981" }} />,
-          title: 'Best Connection',
-          description: 'Players with the lowest ping (best connection)'
-        };
-      case 'survival':
-        return {
-          icon: <Home style={{ width: "20px", height: "20px", color: "#f59e0b" }} />,
-          title: 'Survival Masters',
-          description: 'Players who have spent the most time in survival mode'
-        };
-      case 'creative':
-        return {
-          icon: <Star style={{ width: "20px", height: "20px", color: "#8b5cf6" }} />,
-          title: 'Creative Masters',
-          description: 'Players who have spent the most time in creative mode'
         };
       default: 
         return { 
@@ -240,21 +207,6 @@ export default function Leaderboards() {
           return {
             value: player.deaths > 0 ? formatNumber(player.deaths) : '0',
             label: 'Deaths'
-          };
-        case 'ping':
-          return {
-            value: player.avgPing ? `${player.avgPing}ms` : 'Unknown',
-            label: 'Average Ping'
-          };
-        case 'survival':
-          return {
-            value: player.survivalTime ? formatPlaytime(player.survivalTime) : '0h',
-            label: 'Survival Time'
-          };
-        case 'creative':
-          return {
-            value: player.creativeTime ? formatPlaytime(player.creativeTime) : '0h',
-            label: 'Creative Time'
           };
         default: 
           return { 
@@ -595,9 +547,9 @@ export default function Leaderboards() {
           <div className="slide-up" style={{ marginBottom: '48px' }}>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
-              gap: '8px',
-              maxWidth: '1000px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+              gap: '12px',
+              maxWidth: '900px',
               margin: '0 auto'
             }}>
               {[
@@ -606,9 +558,6 @@ export default function Leaderboards() {
                 { key: 'sessions' as const, label: 'Sessions' },
                 { key: 'builders' as const, label: 'Builders' },
                 { key: 'deaths' as const, label: 'Most Deaths' },
-                { key: 'ping' as const, label: 'Best Ping' },
-                { key: 'survival' as const, label: 'Survival' },
-                { key: 'creative' as const, label: 'Creative' },
               ].map(tab => {
                 const config = getTabConfig(tab.key);
                 return (

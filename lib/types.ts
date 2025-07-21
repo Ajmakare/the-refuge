@@ -26,9 +26,6 @@ export interface LeaderboardData {
   longestSessions: PlayerStats[];
   topBuilders: PlayerStats[];
   mostDeaths: PlayerStats[];
-  bestPing: PlayerStats[];
-  survivalTime: PlayerStats[];
-  creativeMasters: PlayerStats[];
   lastUpdated: string;
 }
 

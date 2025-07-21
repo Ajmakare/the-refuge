@@ -30,9 +30,6 @@ const CONFIG = {
     longestSessions: 15,
     topBuilders: 15,
     mostDeaths: 15,
-    bestPing: 15,
-    survivalTime: 15,
-    creativeMasters: 15,
   }
 };
 
@@ -689,6 +686,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           p.name,
           SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as playtime,
           COUNT(s.id) as sessions,
+          SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
           p.registered as join_date,
           MAX(s.${columns.sessionEnd}) as last_seen
         FROM ${tables.players} p
@@ -737,7 +735,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             name: row.name,
             playtime: row.playtime || 0,
             sessions: row.sessions || 0,
-            kills: { mob: 0, player: 0 },
+            kills: { mob: row.mob_kills || 0, player: 0 },
             deaths: 0,
             blocksPlaced: 0,
             blocksBroken: 0,
@@ -952,145 +950,60 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
     checkComplete();
   }
 
-  // Query 5: Best Ping (lowest average)
-  const hasPingTable = Object.keys(scheme.tables).some(key => 
-    scheme.tables[key] === 'plan_ping'
-  );
+  // Query 5: Top Builders - Check PLAN extensions for block data
+  console.log('🔍 Looking for block placement data in PLAN extensions...');
   
-  if (hasPingTable && tables.players) {
-    const pingQuery = `
-      SELECT 
-        u.uuid, u.name, u.registered as join_date,
-        AVG(p.avg_ping) as avg_ping,
-        COUNT(p.id) as ping_records
-      FROM plan_users u
-      LEFT JOIN plan_ping p ON u.id = p.user_id
-      GROUP BY u.uuid, u.name, u.registered
-      HAVING ping_records > 5 AND avg_ping > 0
-      ORDER BY avg_ping ASC
-      LIMIT ?
-    `;
+  // Try to find block-related data in the extension system
+  const extensionQuery = `
+    SELECT 
+      u.uuid, u.name, u.registered as join_date,
+      COALESCE(
+        SUM(CASE WHEN p.string_value LIKE '%blocks%' OR p.string_value LIKE '%placed%' 
+                  THEN CAST(p.long_value AS INTEGER) ELSE 0 END), 0
+      ) as blocks_placed
+    FROM plan_users u
+    LEFT JOIN plan_extension_user_values p ON u.uuid = p.uuid
+    LEFT JOIN plan_extension_providers pr ON p.provider_id = pr.id
+    WHERE pr.name LIKE '%block%' OR pr.name LIKE '%place%' OR pr.text LIKE '%block%'
+    GROUP BY u.uuid, u.name, u.registered
+    HAVING blocks_placed > 0
+    ORDER BY blocks_placed DESC
+    LIMIT ?
+  `;
 
-    db.all(pingQuery, [CONFIG.limits.bestPing], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying best ping:', err.message);
-      } else {
-        console.log(`🔍 Best Ping query returned ${rows.length} rows`);
-        leaderboardData.bestPing = rows.map(row => ({
-          uuid: row.uuid,
-          name: row.name,
-          playtime: 0,
-          sessions: 0,
-          kills: { mob: 0, player: 0 },
-          deaths: 0,
-          blocksPlaced: 0,
-          blocksBroken: 0,
-          avgPing: Math.round(row.avg_ping || 0),
-          pingRecords: row.ping_records || 0,
-          lastSeen: new Date(row.join_date).toISOString(),
-          joinDate: new Date(row.join_date).toISOString()
-        }));
-      }
+  db.all(extensionQuery, [CONFIG.limits.topBuilders], (err, rows) => {
+    if (err || !rows || rows.length === 0) {
+      console.log('⚠️  No block placement data found in extensions, trying alternative approach...');
+      
+      // Alternative: Check if there's any action data or similar
+      const alternativeQuery = `
+        SELECT u.uuid, u.name, u.registered as join_date, 0 as blocks_placed
+        FROM plan_users u 
+        LIMIT 0
+      `;
+      
+      db.all(alternativeQuery, [], (err2, rows2) => {
+        leaderboardData.topBuilders = [];
+        console.log('⚠️  Skipping Top Builders query - no block data available');
+        checkComplete();
+      });
+    } else {
+      console.log(`🔍 Top Builders query returned ${rows.length} rows`);
+      leaderboardData.topBuilders = rows.map(row => ({
+        uuid: row.uuid,
+        name: row.name,
+        playtime: 0,
+        sessions: 0,
+        kills: { mob: 0, player: 0 },
+        deaths: 0,
+        blocksPlaced: row.blocks_placed || 0,
+        blocksBroken: 0,
+        lastSeen: new Date(row.join_date).toISOString(),
+        joinDate: new Date(row.join_date).toISOString()
+      }));
       checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Best Ping query - missing plan_ping table');
-    checkComplete();
-  }
-
-  // Query 6: Survival Time Leaders
-  const hasWorldTimes = Object.keys(scheme.tables).some(key => 
-    scheme.tables[key] === 'plan_world_times'
-  );
-  
-  if (hasWorldTimes && tables.players) {
-    const survivalQuery = `
-      SELECT 
-        u.uuid, u.name, u.registered as join_date,
-        SUM(wt.survival_time) as total_survival_time,
-        SUM(wt.creative_time) as total_creative_time,
-        SUM(wt.adventure_time) as total_adventure_time
-      FROM plan_users u
-      LEFT JOIN plan_world_times wt ON u.id = wt.user_id
-      GROUP BY u.uuid, u.name, u.registered
-      HAVING total_survival_time > 0
-      ORDER BY total_survival_time DESC
-      LIMIT ?
-    `;
-
-    db.all(survivalQuery, [CONFIG.limits.survivalTime], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying survival time:', err.message);
-      } else {
-        console.log(`🔍 Survival Time query returned ${rows.length} rows`);
-        leaderboardData.survivalTime = rows.map(row => ({
-          uuid: row.uuid,
-          name: row.name,
-          playtime: row.total_survival_time || 0,
-          sessions: 0,
-          kills: { mob: 0, player: 0 },
-          deaths: 0,
-          blocksPlaced: 0,
-          blocksBroken: 0,
-          survivalTime: row.total_survival_time || 0,
-          creativeTime: row.total_creative_time || 0,
-          adventureTime: row.total_adventure_time || 0,
-          lastSeen: new Date(row.join_date).toISOString(),
-          joinDate: new Date(row.join_date).toISOString()
-        }));
-      }
-      checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Survival Time query - missing plan_world_times table');
-    checkComplete();
-  }
-
-  // Query 7: Creative Masters
-  if (hasWorldTimes && tables.players) {
-    const creativeQuery = `
-      SELECT 
-        u.uuid, u.name, u.registered as join_date,
-        SUM(wt.creative_time) as total_creative_time,
-        SUM(wt.survival_time) as total_survival_time
-      FROM plan_users u
-      LEFT JOIN plan_world_times wt ON u.id = wt.user_id
-      GROUP BY u.uuid, u.name, u.registered
-      HAVING total_creative_time > 0
-      ORDER BY total_creative_time DESC
-      LIMIT ?
-    `;
-
-    db.all(creativeQuery, [CONFIG.limits.creativeMasters], (err, rows) => {
-      if (err) {
-        console.error('❌ Error querying creative time:', err.message);
-      } else {
-        console.log(`🔍 Creative Masters query returned ${rows.length} rows`);
-        leaderboardData.creativeMasters = rows.map(row => ({
-          uuid: row.uuid,
-          name: row.name,
-          playtime: row.total_creative_time || 0,
-          sessions: 0,
-          kills: { mob: 0, player: 0 },
-          deaths: 0,
-          blocksPlaced: 0,
-          blocksBroken: 0,
-          creativeTime: row.total_creative_time || 0,
-          survivalTime: row.total_survival_time || 0,
-          lastSeen: new Date(row.join_date).toISOString(),
-          joinDate: new Date(row.join_date).toISOString()
-        }));
-      }
-      checkComplete();
-    });
-  } else {
-    console.log('⚠️  Skipping Creative Masters query - missing plan_world_times table');
-    checkComplete();
-  }
-
-  // Query 8: Top Builders (skip if no actions table)
-  console.log('⚠️  Skipping Top Builders query - missing required tables');
-  checkComplete();
+    }
+  });
 }
 
 /**
@@ -1098,7 +1011,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
  */
 function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
   let completed = 0;
-  const queries = 8; // Increased for new leaderboard types
+  const queries = 5; // Reduced to 5 queries
 
   function checkComplete() {
     completed++;
@@ -1110,9 +1023,6 @@ function runQueriesWithScheme(db, scheme, leaderboardData, resolve, reject) {
       console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
       console.log(`   - Top Builders: ${leaderboardData.topBuilders.length} players`);
       console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
-      console.log(`   - Best Ping: ${leaderboardData.bestPing.length} players`);
-      console.log(`   - Survival Time: ${leaderboardData.survivalTime.length} players`);
-      console.log(`   - Creative Masters: ${leaderboardData.creativeMasters.length} players`);
       resolve(leaderboardData);
     }
   }
@@ -1179,9 +1089,6 @@ async function extractPlayerStats() {
       longestSessions: [],
       topBuilders: [],
       mostDeaths: [],
-      bestPing: [],
-      survivalTime: [],
-      creativeMasters: [],
       lastUpdated: new Date().toISOString()
     };
 
@@ -1253,9 +1160,6 @@ async function main() {
     console.log(`   - Longest Sessions: ${leaderboardData.longestSessions.length} players`);
     console.log(`   - Top Builders: ${leaderboardData.topBuilders.length} players`);
     console.log(`   - Most Deaths: ${leaderboardData.mostDeaths.length} players`);
-    console.log(`   - Best Ping: ${leaderboardData.bestPing.length} players`);
-    console.log(`   - Survival Time: ${leaderboardData.survivalTime.length} players`);
-    console.log(`   - Creative Masters: ${leaderboardData.creativeMasters.length} players`);
     
   } catch (error) {
     console.error('❌ Error during sync:', error.message);
