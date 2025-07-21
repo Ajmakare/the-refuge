@@ -1,7 +1,7 @@
 "use client";
-import { Users, Shield, Heart, Pickaxe, Home, BarChart3, Vote, Calendar, Gavel } from "lucide-react";
+import { Shield, Pickaxe, Home, BarChart3, Vote, Calendar } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 export default function HomePage() {
   useEffect(() => {
@@ -164,7 +164,7 @@ export default function HomePage() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="modern-button primary"
-                style={{ fontSize: '18px', padding: '20px 40px', '--stagger-delay': '1' }}
+                style={{ fontSize: '18px', padding: '20px 40px', '--stagger-delay': '1' } as React.CSSProperties}
               >
                 💬 Join Discord & Apply
               </a>
@@ -172,7 +172,7 @@ export default function HomePage() {
               <Link 
                 href="/leaderboards"
                 className="modern-button secondary"
-                style={{ fontSize: '18px', padding: '20px 40px', '--stagger-delay': '2' }}
+                style={{ fontSize: '18px', padding: '20px 40px', '--stagger-delay': '2' } as React.CSSProperties}
               >
                 📊 View Leaderboards
               </Link>
@@ -290,7 +290,7 @@ export default function HomePage() {
             Server Rules
           </h3>
           <div className="grid grid-2 stagger-children" style={{ gap: '32px' }}>
-            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '1' }}>
+            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '1' } as React.CSSProperties}>
               <h4 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px', color: 'var(--success)' }}>
                 1. Be Respectful
               </h4>
@@ -299,16 +299,16 @@ export default function HomePage() {
               </p>
             </div>
             
-            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '2' }}>
+            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '2' } as React.CSSProperties}>
               <h4 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px', color: 'var(--primary)' }}>
                 2. No Griefing or Stealing
               </h4>
               <p style={{ color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.6' }}>
-                Respect others' property. No destroying, modifying, or taking other players' builds, items, or pets without permission.
+                Respect others&apos; property. No destroying, modifying, or taking other players&apos; builds, items, or pets without permission.
               </p>
             </div>
             
-            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '3' }}>
+            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '3' } as React.CSSProperties}>
               <h4 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px', color: 'var(--error)' }}>
                 3. No Exploiting
               </h4>
@@ -317,25 +317,25 @@ export default function HomePage() {
               </p>
             </div>
             
-            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '4' }}>
+            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '4' } as React.CSSProperties}>
               <h4 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px', color: 'var(--accent)' }}>
                 4. Keep it PG-13
               </h4>
               <p style={{ color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.6' }}>
-                Keep all content appropriate for all ages. If it can't be shown in a Marvel movie, it won't fly here.
+                Keep all content appropriate for all ages. If it can&apos;t be shown in a Marvel movie, it won&apos;t fly here.
               </p>
             </div>
             
-            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '5' }}>
+            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '5' } as React.CSSProperties}>
               <h4 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px', color: 'var(--neutral)' }}>
                 5. No Advertising
               </h4>
               <p style={{ color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.6' }}>
-                Don't promote other servers, websites, or unapproved services within our community.
+                Don&apos;t promote other servers, websites, or unapproved services within our community.
               </p>
             </div>
             
-            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '6' }}>
+            <div className="fade-in" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', '--stagger-delay': '6' } as React.CSSProperties}>
               <h4 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px', color: 'var(--success)' }}>
                 6. Consensual PvP
               </h4>
@@ -368,7 +368,7 @@ export default function HomePage() {
                 color: 'rgba(255, 255, 255, 0.6)',
                 fontSize: '14px'
               }}>
-                <p>&copy; 2024 The Refuge Minecraft Server. A legacy that's here to stay. ❤️</p>
+                <p>&copy; 2024 The Refuge Minecraft Server. A legacy that&apos;s here to stay. ❤️</p>
               </div>
             </div>
             

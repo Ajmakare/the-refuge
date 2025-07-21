@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Clock, Sword, Hammer, Home, BarChart3, Crown, Star, Target, Building } from "lucide-react";
+import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star, Target, Building } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
@@ -29,8 +29,12 @@ export default function Leaderboards() {
         console.error('Failed to load leaderboard data:', err);
         setLoading(false);
       });
+  }, []);
 
-    // Setup scroll animations
+  useEffect(() => {
+    // Setup scroll animations after data loads
+    if (!data) return;
+
     const observerOptions = {
       threshold: 0.1,
       rootMargin: '0px 0px -50px 0px'
@@ -44,21 +48,33 @@ export default function Leaderboards() {
       });
     }, observerOptions);
 
-    // Observe all elements with animation classes
-    const elementsToAnimate = document.querySelectorAll('.fade-in, .slide-up, .slide-left, .slide-right');
-    elementsToAnimate.forEach((el) => observer.observe(el));
+    // Small delay to ensure DOM is updated
+    const timer = setTimeout(() => {
+      const elementsToAnimate = document.querySelectorAll('.fade-in, .slide-up, .slide-left, .slide-right');
+      elementsToAnimate.forEach((el) => observer.observe(el));
+      
+      // Fallback: force animation after a short delay if intersection observer doesn't work
+      setTimeout(() => {
+        elementsToAnimate.forEach((el) => {
+          if (!el.classList.contains('animate-in')) {
+            el.classList.add('animate-in');
+          }
+        });
+      }, 500);
+    }, 100);
 
     return () => {
-      elementsToAnimate.forEach((el) => observer.unobserve(el));
+      clearTimeout(timer);
+      observer.disconnect();
     };
-  }, []);
+  }, [data]);
 
-  const getActiveData = () => {
+  const getActiveData = (): PlayerStats[] => {
     if (!data) {
       console.log('getActiveData: No data available');
       return [];
     }
-    let result;
+    let result: PlayerStats[];
     switch (activeTab) {
       case 'active': 
         result = data.mostActive;
@@ -142,10 +158,12 @@ export default function Leaderboards() {
     const displayStat = getDisplayStat();
 
     return (
-      <div className="minecraft-card slide-up" style={{ 
+      <div className="minecraft-card" style={{ 
         marginBottom: '16px',
         background: rank <= 3 ? 'rgba(255, 255, 255, 0.12)' : 'var(--glass-bg)',
-        border: rank <= 3 ? `2px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}` : '1px solid var(--glass-border)'
+        border: rank <= 3 ? `2px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'}` : '1px solid var(--glass-border)',
+        opacity: 1,
+        transform: 'translateY(0)'
       }}>
         <div className="player-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1', minWidth: '250px' }}>
@@ -410,7 +428,7 @@ export default function Leaderboards() {
               maxWidth: '600px',
               margin: '0 auto 24px auto'
             }}>
-              See who's leading The Refuge community
+              See who&apos;s leading The Refuge community
             </p>
             {data && (
               <p style={{ 
@@ -635,7 +653,7 @@ export default function Leaderboards() {
                 color: 'rgba(255, 255, 255, 0.6)',
                 fontSize: '14px'
               }}>
-                <p>&copy; 2024 The Refuge Minecraft Server. A legacy that's here to stay. ❤️</p>
+                <p>&copy; 2024 The Refuge Minecraft Server. A legacy that&apos;s here to stay. ❤️</p>
               </div>
             </div>
             

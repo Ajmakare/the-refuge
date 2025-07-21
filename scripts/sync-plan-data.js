@@ -6,6 +6,9 @@ const sqlite3 = require('sqlite3').verbose();
 
 // Configuration
 const CONFIG = {
+  // Development mode - skip download if true
+  devMode: process.env.NODE_ENV === 'development' || process.env.DEV_MODE === 'true',
+  
   // FTP/SFTP connection details for GGServers
   server: {
     host: process.env.GGSERVERS_HOST || 'your-server.ggservers.com',
@@ -14,10 +17,10 @@ const CONFIG = {
     port: process.env.GGSERVERS_PORT || 21, // or 22 for SFTP
   },
   
-  // Paths
-  remoteSqlitePath: '/path/to/Plan/Plan.db', // Update this path
+  // Paths - GGServers typically uses /plugins/Plan/ for the PLAN plugin
+  remoteSqlitePath: '/plugins/Plan/database.db', // Standard PLAN plugin database location
   localSqlitePath: './temp/Plan.db',
-  outputJsonPath: './public/data/leaderboards.json',
+  outputJsonPath: '../public/data/leaderboards.json', // Relative to scripts directory
   
   // Data limits
   limits: {
@@ -29,23 +32,10 @@ const CONFIG = {
 };
 
 /**
- * Download SQLite file from GGServers via FTP
- * You'll need to implement this based on your server access method
+ * Download SQLite file from GGServers via FTP/SFTP
  */
 async function downloadSqliteFile() {
   console.log('⬇️  Downloading SQLite file from server...');
-  
-  // Option 1: Using FTP (install 'ftp' package)
-  // const Client = require('ftp');
-  // const client = new Client();
-  
-  // Option 2: Using SFTP (install 'ssh2-sftp-client' package)
-  // const Client = require('ssh2-sftp-client');
-  // const sftp = new Client();
-  
-  // Option 3: Manual download for now
-  console.log('⚠️  Manual download required. Please download Plan.db from your server and place it at:', CONFIG.localSqlitePath);
-  console.log('   Server path:', CONFIG.remoteSqlitePath);
   
   // Create temp directory if it doesn't exist
   const tempDir = path.dirname(CONFIG.localSqlitePath);
@@ -53,12 +43,249 @@ async function downloadSqliteFile() {
     fs.mkdirSync(tempDir, { recursive: true });
   }
   
-  // For now, check if file exists locally
-  if (!fs.existsSync(CONFIG.localSqlitePath)) {
-    throw new Error(`SQLite file not found at ${CONFIG.localSqlitePath}. Please download it manually first.`);
+  // Development mode: skip download and use sample data if available
+  if (CONFIG.devMode) {
+    console.log('🔧 Development mode enabled - skipping download');
+    
+    // Check if we have existing sample data to continue with
+    const existingSampleData = '../public/data/leaderboards.json';
+    if (fs.existsSync(existingSampleData)) {
+      console.log('✅ Found existing sample data, will use current structure');
+      console.log('💡 To test with real database, set your GGServers credentials and remove DEV_MODE');
+      return;
+    }
+    
+    // If no sample data exists, create a minimal SQLite database for testing
+    await createSampleDatabase();
+    return;
   }
   
-  console.log('✅ SQLite file found locally');
+  // Try SFTP first (more secure), then fall back to FTP
+  let downloadSuccess = false;
+  
+  // Option 1: Try SFTP download
+  if (CONFIG.server.port === 22 || CONFIG.server.port === '22') {
+    try {
+      console.log('🔒 Attempting SFTP download...');
+      const Client = require('ssh2-sftp-client');
+      const sftp = new Client();
+      
+      await sftp.connect({
+        host: CONFIG.server.host,
+        port: CONFIG.server.port,
+        username: CONFIG.server.username,
+        password: CONFIG.server.password,
+        readyTimeout: 20000,
+        retries: 2
+      });
+      
+      console.log('✅ SFTP connected successfully');
+      
+      // Download the Plan database file
+      await sftp.get(CONFIG.remoteSqlitePath, CONFIG.localSqlitePath);
+      
+      await sftp.end();
+      downloadSuccess = true;
+      console.log('✅ SFTP download completed successfully');
+      
+    } catch (sftpError) {
+      console.log('❌ SFTP download failed:', sftpError.message);
+      console.log('🔄 Falling back to FTP...');
+    }
+  }
+  
+  // Option 2: Try FTP download if SFTP failed or port is 21
+  if (!downloadSuccess) {
+    try {
+      console.log('📁 Attempting FTP download...');
+      const Client = require('ftp');
+      const client = new Client();
+      
+      await new Promise((resolve, reject) => {
+        client.on('ready', () => {
+          console.log('✅ FTP connected successfully');
+          
+          client.get(CONFIG.remoteSqlitePath, (err, stream) => {
+            if (err) {
+              reject(new Error(`FTP get error: ${err.message}`));
+              return;
+            }
+            
+            const writeStream = fs.createWriteStream(CONFIG.localSqlitePath);
+            stream.pipe(writeStream);
+            
+            stream.on('end', () => {
+              client.end();
+              console.log('✅ FTP download completed successfully');
+              resolve();
+            });
+            
+            stream.on('error', (streamErr) => {
+              client.end();
+              reject(new Error(`FTP stream error: ${streamErr.message}`));
+            });
+          });
+        });
+        
+        client.on('error', (connErr) => {
+          reject(new Error(`FTP connection error: ${connErr.message}`));
+        });
+        
+        client.connect({
+          host: CONFIG.server.host,
+          port: CONFIG.server.port === 22 ? 21 : CONFIG.server.port,
+          user: CONFIG.server.username,
+          password: CONFIG.server.password,
+          connTimeout: 20000
+        });
+      });
+      
+      downloadSuccess = true;
+      
+    } catch (ftpError) {
+      console.log('❌ FTP download failed:', ftpError.message);
+    }
+  }
+  
+  // Final check: Manual fallback or error
+  if (!downloadSuccess) {
+    console.log('⚠️  Automated download failed. Checking for manual file...');
+    
+    if (fs.existsSync(CONFIG.localSqlitePath)) {
+      console.log('✅ Found manually placed SQLite file');
+      return;
+    }
+    
+    throw new Error(`
+❌ Could not download SQLite file automatically. Please:
+1. Check your GGServers credentials and connection
+2. Verify the remote path: ${CONFIG.remoteSqlitePath}
+3. Or manually download Plan.db and place it at: ${CONFIG.localSqlitePath}
+
+Connection attempted:
+- Host: ${CONFIG.server.host}
+- Port: ${CONFIG.server.port}
+- Username: ${CONFIG.server.username}
+- Remote path: ${CONFIG.remoteSqlitePath}
+    `);
+  }
+  
+  // Verify downloaded file
+  if (!fs.existsSync(CONFIG.localSqlitePath)) {
+    throw new Error('Downloaded file not found at expected location');
+  }
+  
+  const fileStats = fs.statSync(CONFIG.localSqlitePath);
+  if (fileStats.size === 0) {
+    throw new Error('Downloaded file is empty');
+  }
+  
+  console.log(`✅ SQLite file downloaded successfully (${Math.round(fileStats.size / 1024)}KB)`);
+}
+
+/**
+ * Create a sample SQLite database for development/testing
+ */
+async function createSampleDatabase() {
+  console.log('🔨 Creating sample SQLite database for development...');
+  
+  return new Promise((resolve, reject) => {
+    const db = new sqlite3.Database(CONFIG.localSqlitePath, (err) => {
+      if (err) {
+        reject(new Error(`Failed to create sample database: ${err.message}`));
+        return;
+      }
+    });
+
+    // Create sample tables and data based on the existing sample data
+    const sampleData = [
+      {
+        uuid: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Steve_Builder',
+        playtime: 7200000,
+        sessions: 45,
+        mob_kills: 1250,
+        player_kills: 5,
+        deaths: 32,
+        blocks_placed: 15000,
+        blocks_broken: 8500,
+        last_seen: Date.now(),
+        registered: Date.now() - (30 * 24 * 60 * 60 * 1000) // 30 days ago
+      },
+      {
+        uuid: '456e7890-e89b-12d3-a456-426614174001',
+        name: 'Alex_Miner',
+        playtime: 6900000,
+        sessions: 38,
+        mob_kills: 980,
+        player_kills: 2,
+        deaths: 28,
+        blocks_placed: 12000,
+        blocks_broken: 22000,
+        last_seen: Date.now() - (24 * 60 * 60 * 1000), // 1 day ago
+        registered: Date.now() - (45 * 24 * 60 * 60 * 1000) // 45 days ago
+      }
+    ];
+
+    // Create tables
+    db.serialize(() => {
+      db.run(`CREATE TABLE plan_players (
+        uuid TEXT PRIMARY KEY,
+        name TEXT,
+        registered INTEGER
+      )`);
+
+      db.run(`CREATE TABLE plan_sessions_summary (
+        uuid TEXT,
+        playtime INTEGER,
+        session_count INTEGER,
+        last_seen INTEGER
+      )`);
+
+      db.run(`CREATE TABLE plan_kills (
+        uuid TEXT,
+        mob_kills INTEGER,
+        player_kills INTEGER
+      )`);
+
+      db.run(`CREATE TABLE plan_deaths (
+        uuid TEXT,
+        deaths INTEGER
+      )`);
+
+      db.run(`CREATE TABLE plan_actions (
+        uuid TEXT,
+        blocks_placed INTEGER,
+        blocks_broken INTEGER
+      )`);
+
+      // Insert sample data
+      const stmt1 = db.prepare('INSERT INTO plan_players VALUES (?, ?, ?)');
+      const stmt2 = db.prepare('INSERT INTO plan_sessions_summary VALUES (?, ?, ?, ?)');
+      const stmt3 = db.prepare('INSERT INTO plan_kills VALUES (?, ?, ?)');
+      const stmt4 = db.prepare('INSERT INTO plan_deaths VALUES (?, ?)');
+      const stmt5 = db.prepare('INSERT INTO plan_actions VALUES (?, ?, ?)');
+
+      sampleData.forEach(player => {
+        stmt1.run(player.uuid, player.name, player.registered);
+        stmt2.run(player.uuid, player.playtime, player.sessions, player.last_seen);
+        stmt3.run(player.uuid, player.mob_kills, player.player_kills);
+        stmt4.run(player.uuid, player.deaths);
+        stmt5.run(player.uuid, player.blocks_placed, player.blocks_broken);
+      });
+
+      stmt1.finalize();
+      stmt2.finalize();
+      stmt3.finalize();
+      stmt4.finalize();
+      stmt5.finalize();
+
+      db.close(() => {
+        console.log('✅ Sample SQLite database created');
+        resolve();
+      });
+    });
+  });
 }
 
 /**
@@ -66,6 +293,17 @@ async function downloadSqliteFile() {
  */
 async function extractPlayerStats() {
   console.log('📊 Extracting player statistics...');
+  
+  // In development mode, if no database exists but we have sample data, just refresh it
+  if (CONFIG.devMode && !fs.existsSync(CONFIG.localSqlitePath)) {
+    const existingSampleData = '../public/data/leaderboards.json';
+    if (fs.existsSync(existingSampleData)) {
+      console.log('📊 Development mode: refreshing existing sample data with new timestamp');
+      const sampleData = JSON.parse(fs.readFileSync(existingSampleData, 'utf8'));
+      sampleData.lastUpdated = new Date().toISOString();
+      return sampleData;
+    }
+  }
   
   return new Promise((resolve, reject) => {
     const db = new sqlite3.Database(CONFIG.localSqlitePath, sqlite3.OPEN_READONLY, (err) => {

@@ -5,7 +5,8 @@
   "main": "sync-plan-data.js",
   "scripts": {
     "sync": "node sync-plan-data.js",
-    "sync:dev": "node sync-plan-data.js"
+    "sync:dev": "DEV_MODE=true node sync-plan-data.js",
+    "sync:production": "NODE_ENV=production node sync-plan-data.js"
   },
   "dependencies": {
     "sqlite3": "^5.1.6"

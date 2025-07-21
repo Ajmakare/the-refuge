@@ -2,14 +2,15 @@ name: Sync PLAN Data
 
 on:
   schedule:
-    # Run daily at 6 AM UTC (adjust timezone as needed)
-    - cron: '0 6 * * *'
+    # Run every 30 minutes for near real-time updates
+    - cron: '*/30 * * * *'
   workflow_dispatch: # Allow manual trigger
     inputs:
       force_sync:
         description: 'Force sync even if no changes'
         required: false
         default: 'false'
+        type: boolean
 
 jobs:
   sync-data:
@@ -20,6 +21,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -31,40 +33,22 @@ jobs:
     - name: Install script dependencies
       run: |
         cd scripts
-        npm install
+        npm ci
     
-    - name: Download PLAN database from server
+    - name: Download and sync PLAN database
       env:
         GGSERVERS_HOST: ${{ secrets.GGSERVERS_HOST }}
         GGSERVERS_USERNAME: ${{ secrets.GGSERVERS_USERNAME }}
         GGSERVERS_PASSWORD: ${{ secrets.GGSERVERS_PASSWORD }}
         GGSERVERS_PORT: ${{ secrets.GGSERVERS_PORT }}
       run: |
-        # Create temp directory
-        mkdir -p scripts/temp
-        
-        # Download using FTP/SFTP (you'll need to customize this based on your server)
-        # For now, we'll use a placeholder that expects manual upload
-        echo "⚠️  Manual database download required"
-        echo "Please ensure Plan.db is available or implement automated download"
-        
-        # Example FTP download (uncomment and modify as needed):
-        # sudo apt-get update && sudo apt-get install -y lftp
-        # lftp -c "set ftp:ssl-allow no; open -u $GGSERVERS_USERNAME,$GGSERVERS_PASSWORD $GGSERVERS_HOST; get /path/to/Plan/Plan.db -o scripts/temp/Plan.db"
-        
-        # Example SFTP download (uncomment and modify as needed):
-        # sudo apt-get update && sudo apt-get install -y sshpass
-        # sshpass -p "$GGSERVERS_PASSWORD" sftp -o StrictHostKeyChecking=no $GGSERVERS_USERNAME@$GGSERVERS_HOST:/path/to/Plan/Plan.db scripts/temp/Plan.db
-        
-        # For demo purposes, copy the existing sample data
-        if [ ! -f "scripts/temp/Plan.db" ]; then
-          echo "No Plan.db found, using sample data"
-          # The script will use the existing sample JSON data
-        fi
-    
-    - name: Sync PLAN data to JSON
-      run: |
         cd scripts
+        echo "🚀 Starting PLAN data sync..."
+        
+        # Create temp directory
+        mkdir -p temp
+        
+        # Run the sync script
         npm run sync
     
     - name: Check for changes
@@ -72,27 +56,80 @@ jobs:
       run: |
         if git diff --quiet public/data/leaderboards.json; then
           echo "changes=false" >> $GITHUB_OUTPUT
-          echo "No changes detected in leaderboard data"
+          echo "📊 No changes detected in leaderboard data"
         else
           echo "changes=true" >> $GITHUB_OUTPUT
-          echo "Changes detected in leaderboard data"
+          echo "🔄 Changes detected in leaderboard data"
+          
+          # Show what changed
+          echo "📝 Changes summary:"
+          git diff --stat public/data/leaderboards.json || true
         fi
+    
+    - name: Validate JSON data
+      if: steps.changes.outputs.changes == 'true' || github.event.inputs.force_sync == 'true'
+      run: |
+        echo "🔍 Validating generated JSON..."
+        if ! python3 -m json.tool public/data/leaderboards.json > /dev/null; then
+          echo "❌ Invalid JSON generated"
+          exit 1
+        fi
+        echo "✅ JSON validation passed"
+        
+        # Show data statistics
+        echo "📊 Leaderboard statistics:"
+        node -e "
+          const data = JSON.parse(require('fs').readFileSync('public/data/leaderboards.json', 'utf8'));
+          console.log('  - Most Active:', data.mostActive.length, 'players');
+          console.log('  - Top Killers:', data.topKillers.length, 'players');
+          console.log('  - Longest Sessions:', data.longestSessions.length, 'players');
+          console.log('  - Top Builders:', data.topBuilders.length, 'players');
+          console.log('  - Last Updated:', data.lastUpdated);
+        "
     
     - name: Commit and push changes
       if: steps.changes.outputs.changes == 'true' || github.event.inputs.force_sync == 'true'
       run: |
         git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --local user.name "GitHub Action - PLAN Sync"
+        
         git add public/data/leaderboards.json
-        git commit -m "🤖 Update leaderboard data - $(date '+%Y-%m-%d %H:%M:%S UTC')"
+        
+        # Create detailed commit message
+        commit_message="🤖 Update leaderboard data - $(date '+%Y-%m-%d %H:%M:%S UTC')
+
+        📊 Data sync completed:
+        $(node -e "
+          try {
+            const data = JSON.parse(require('fs').readFileSync('public/data/leaderboards.json', 'utf8'));
+            console.log('- Most Active: ' + data.mostActive.length + ' players');
+            console.log('- Top Killers: ' + data.topKillers.length + ' players');
+            console.log('- Longest Sessions: ' + data.longestSessions.length + ' players');
+            console.log('- Top Builders: ' + data.topBuilders.length + ' players');
+            if (data.mostActive[0]) console.log('- Top Player: ' + data.mostActive[0].name + ' (' + Math.round(data.mostActive[0].playtime/3600000) + 'h playtime)');
+          } catch(e) { console.log('- Error reading stats'); }
+        ")
+        
+        ⚡ Auto-generated by GitHub Actions"
+        
+        git commit -m "$commit_message"
         git push
+        
+        echo "✅ Changes committed and pushed"
     
-    - name: Deploy to Vercel (trigger)
-      if: steps.changes.outputs.changes == 'true' || github.event.inputs.force_sync == 'true'
-      run: |
-        echo "✅ Data updated, Vercel will automatically redeploy"
-    
-    - name: Cleanup
+    - name: Cleanup temporary files
+      if: always()
       run: |
         rm -rf scripts/temp
         echo "🧹 Cleanup completed"
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ PLAN data sync failed!"
+        echo "Check the logs above for details."
+        echo "Common issues:"
+        echo "1. GGServers connection problems"
+        echo "2. Invalid credentials"
+        echo "3. PLAN database not found or corrupted"
+        echo "4. Network connectivity issues"

@@ -17,8 +17,11 @@ export function AdSense({
 }: AdSenseProps) {
   useEffect(() => {
     try {
-      if (typeof window !== "undefined" && (window as any).adsbygoogle) {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+      if (typeof window !== "undefined") {
+        const globalWindow = window as typeof window & { adsbygoogle?: unknown[] };
+        if (globalWindow.adsbygoogle) {
+          (globalWindow.adsbygoogle = globalWindow.adsbygoogle || []).push({});
+        }
       }
     } catch (error) {
       console.error("AdSense error:", error);
