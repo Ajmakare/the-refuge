@@ -8,8 +8,6 @@ export interface PlayerStats {
     player: number;
   };
   deaths: number;
-  blocksPlaced: number;
-  blocksBroken: number;
   lastSeen: string;
   joinDate: string;
   // Optional additional stats for specialized leaderboards
@@ -18,6 +16,9 @@ export interface PlayerStats {
   survivalTime?: number;
   creativeTime?: number;
   adventureTime?: number;
+  afkTime?: number;
+  daysActive?: number;
+  activityScore?: number; // Internal activity calculation for sorting
 }
 
 export interface LeaderboardData {

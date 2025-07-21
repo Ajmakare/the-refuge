@@ -104,7 +104,9 @@ export default function Leaderboards() {
                 lastSeen: activePlayer.lastSeen || killer.lastSeen,
                 playtime: activePlayer.playtime || 0,
                 sessions: activePlayer.sessions || 0,
-                deaths: activePlayer.deaths || killer.deaths
+                deaths: activePlayer.deaths || killer.deaths,
+                afkTime: activePlayer.afkTime || killer.afkTime,
+                daysActive: activePlayer.daysActive || killer.daysActive
               };
             }
             return killer;
@@ -131,7 +133,9 @@ export default function Leaderboards() {
                   lastSeen: activePlayer.lastSeen || deathPlayer.lastSeen,
                   playtime: activePlayer.playtime || 0,
                   sessions: activePlayer.sessions || deathPlayer.sessions,
-                  kills: activePlayer.kills || deathPlayer.kills
+                  kills: activePlayer.kills || deathPlayer.kills,
+                  afkTime: activePlayer.afkTime || deathPlayer.afkTime,
+                  daysActive: activePlayer.daysActive || deathPlayer.daysActive
                 };
               }
               return deathPlayer;
@@ -152,7 +156,7 @@ export default function Leaderboards() {
         return { 
           icon: <Clock style={{ width: "20px", height: "20px" }} />, 
           title: 'Most Active Players',
-          description: 'Players with the highest total playtime'
+          description: 'Players ranked by activity score (active time + engagement + frequency)'
         };
       case 'killers': 
         return { 
@@ -366,13 +370,13 @@ export default function Leaderboards() {
               <div style={{ 
                 fontSize: '16px', 
                 fontWeight: '600',
-                color: player.blocksPlaced > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
+                color: (player.daysActive || 0) > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
                 fontFamily: 'Inter, sans-serif'
               }}>
-                {formatNumber(player.blocksPlaced)}
+                {player.daysActive || 0}
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
-                Blocks
+                Days Active
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>

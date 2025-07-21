@@ -668,8 +668,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             sessions: row.sessions || 0,
             kills: { mob: 0, player: 0 },
             deaths: 0,
-            blocksPlaced: 0,
-            blocksBroken: 0,
+            afkTime: 0,
+            daysActive: 0,
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -686,13 +686,28 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as playtime,
           COUNT(s.id) as sessions,
           SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
+          SUM(COALESCE(s.afk_time, 0)) as afk_time,
           p.registered as join_date,
-          MAX(s.${columns.sessionEnd}) as last_seen
+          MAX(s.${columns.sessionEnd}) as last_seen,
+          CAST((julianday('now') - julianday(p.registered/1000, 'unixepoch')) AS INTEGER) as days_active,
+          -- Calculate activity score considering multiple factors
+          CAST(
+            -- Base active time (total playtime - afk time, minimum 0)
+            MAX(0, SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) - SUM(COALESCE(s.afk_time, 0))) * 0.4
+            -- Session frequency bonus (more regular players get bonus)
+            + (COUNT(s.id) * 3600000 * 0.3)  -- 1 hour equivalent per session
+            -- Recent activity bonus (within last 7 days gets 20% bonus)
+            + CASE WHEN MAX(s.${columns.sessionEnd}) > (strftime('%s', 'now') - 604800) * 1000 
+                   THEN SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) * 0.2 
+                   ELSE 0 END
+            -- Engagement bonus (kills indicate active gameplay)
+            + (SUM(COALESCE(s.mob_kills, 0)) * 60000 * 0.1)  -- 1 minute equivalent per mob kill
+          AS INTEGER) as activity_score
         FROM ${tables.players} p
         LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
         GROUP BY p.uuid, p.name, p.registered
         HAVING SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) > 0
-        ORDER BY playtime DESC
+        ORDER BY activity_score DESC, playtime DESC
         LIMIT ?
       `;
 
@@ -719,8 +734,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
                 sessions: 0,
                 kills: { mob: 0, player: 0 },
                 deaths: 0,
-                blocksPlaced: 0,
-                blocksBroken: 0,
+                afkTime: 0,
+                daysActive: 0,
                 lastSeen: new Date(row.join_date).toISOString(),
                 joinDate: new Date(row.join_date).toISOString()
               }));
@@ -736,8 +751,9 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             sessions: row.sessions || 0,
             kills: { mob: row.mob_kills || 0, player: 0 },
             deaths: 0,
-            blocksPlaced: 0,
-            blocksBroken: 0,
+            afkTime: row.afk_time || 0,
+            daysActive: row.days_active || 0,
+            activityScore: row.activity_score || 0, // Internal scoring metric
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -766,8 +782,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             sessions: 0,
             kills: { mob: 0, player: 0 },
             deaths: 0,
-            blocksPlaced: 0,
-            blocksBroken: 0,
+            afkTime: 0,
+            daysActive: 0,
             lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -811,8 +827,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             sessions: 0,
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
             deaths: 0,
-            blocksPlaced: 0,
-            blocksBroken: 0,
+            afkTime: 0,
+            daysActive: 0,
             lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -823,17 +839,32 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
       // Merge PvP kills with mob kills from sessions for Top Combat leaderboard
       console.log('📊 Aggregating kill data from individual kill records AND session mob kills...');
       
+      // First get mob kills from sessions, then PvP kills separately and combine
       const combinedKillsQuery = `
+        WITH mob_kills_summary AS (
+          SELECT 
+            p.uuid, p.name, p.registered as join_date,
+            COALESCE(SUM(s.mob_kills), 0) as mob_kills
+          FROM ${tables.players} p
+          LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+          GROUP BY p.uuid, p.name, p.registered
+        ),
+        pvp_kills_summary AS (
+          SELECT 
+            p.uuid,
+            COUNT(k.id) as player_kills
+          FROM ${tables.players} p
+          LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
+          GROUP BY p.uuid
+        )
         SELECT 
-          p.uuid, p.name, p.registered as join_date,
-          COALESCE(SUM(s.mob_kills), 0) as mob_kills,
-          COUNT(k.id) as player_kills,
-          (COALESCE(SUM(s.mob_kills), 0) + COUNT(k.id)) as total_kills
-        FROM ${tables.players} p
-        LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
-        LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
-        GROUP BY p.uuid, p.name, p.registered
-        HAVING total_kills > 0
+          m.uuid, m.name, m.join_date,
+          m.mob_kills,
+          COALESCE(pk.player_kills, 0) as player_kills,
+          (m.mob_kills + COALESCE(pk.player_kills, 0)) as total_kills
+        FROM mob_kills_summary m
+        LEFT JOIN pvp_kills_summary pk ON m.uuid = pk.uuid
+        WHERE (m.mob_kills + COALESCE(pk.player_kills, 0)) > 0
         ORDER BY total_kills DESC
         LIMIT ?
       `;
@@ -850,8 +881,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             sessions: 0,
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
             deaths: 0,
-            blocksPlaced: 0,
-            blocksBroken: 0,
+            afkTime: 0,
+            daysActive: 0,
             lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -897,8 +928,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           sessions: row.sessions || 0,
           kills: { mob: 0, player: 0 },
           deaths: 0,
-          blocksPlaced: 0,
-          blocksBroken: 0,
+          afkTime: 0,
+          daysActive: 0,
           lastSeen: new Date(row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));
@@ -937,8 +968,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           sessions: row.sessions || 0,
           kills: { mob: 0, player: 0 },
           deaths: row.total_deaths || 0,
-          blocksPlaced: 0,
-          blocksBroken: 0,
+          afkTime: 0,
+          daysActive: 0,
           lastSeen: new Date(row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));
@@ -997,8 +1028,8 @@ function formatPlayerRow(row) {
       player: row.player_kills || 0
     },
     deaths: row.deaths || 0,
-    blocksPlaced: row.blocks_placed || 0,
-    blocksBroken: row.blocks_broken || 0,
+    afkTime: 0,
+    daysActive: 0,
     lastSeen: row.last_seen ? new Date(row.last_seen).toISOString() : new Date().toISOString(),
     joinDate: row.join_date ? new Date(row.join_date).toISOString() : new Date().toISOString()
   };
