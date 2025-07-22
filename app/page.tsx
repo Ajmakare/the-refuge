@@ -30,20 +30,16 @@ export default function HomePage() {
 
   return (
     <div style={{ 
-      minHeight: "100vh", 
-      backgroundImage: `
-        linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-        url('/images/minecraft_bg.avif')
-      `,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      filter: 'blur(0px)',
-      position: 'relative'
+      minHeight: "100dvh", // Dynamic viewport height for mobile (fallback: 100vh)
+      position: 'relative',
+      paddingTop: 'env(safe-area-inset-top)', // iPhone dynamic island support
+      paddingBottom: 'env(safe-area-inset-bottom)', // iPhone home indicator support
+      paddingLeft: 'env(safe-area-inset-left)',
+      paddingRight: 'env(safe-area-inset-right)'
     }}>
-      {/* Background blur overlay */}
+      {/* Fixed background layer */}
       <div style={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
@@ -51,10 +47,22 @@ export default function HomePage() {
         backgroundImage: `url('/images/minecraft_bg.avif')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
         filter: 'blur(8px)',
+        zIndex: -2
+      }} />
+      
+      {/* Background overlay */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: `linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5))`,
         zIndex: -1
       }} />
+      
       
 
 

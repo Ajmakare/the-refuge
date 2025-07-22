@@ -39,6 +39,7 @@ body {
   background: #0a0a0a;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   line-height: 1.6;
   /* Prevent horizontal scrolling on mobile */
   overflow-x: hidden;
@@ -520,5 +521,23 @@ body {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 16px !important;
     width: 100% !important;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari background-attachment: fixed is buggy */
+  .ios-bg-fix {
+    background-attachment: scroll !important;
+  }
+  
+  /* Better mobile viewport handling for iOS */
+  body {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix for iOS viewport height issues */
+  .mobile-vh-fix {
+    min-height: -webkit-fill-available;
   }
 }
