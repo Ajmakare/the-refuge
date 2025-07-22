@@ -50,6 +50,14 @@ export function formatDateTime(dateString: string): string {
 export function formatRank(rankValue: string | undefined): string {
   if (!rankValue) return '[Member]';
   
+  // Clean the rank value - remove brackets if present and convert to lowercase
+  let cleanRank = rankValue.toLowerCase().replace(/[\[\]]/g, '');
+  
+  // Handle special cases
+  if (cleanRank === 'default') {
+    cleanRank = 'member';
+  }
+  
   const rankMap: Record<string, string> = {
     'admin': '[Admin]',
     'moderator': '[Moderator]',
@@ -61,11 +69,19 @@ export function formatRank(rankValue: string | undefined): string {
     'member': '[Member]'
   };
   
-  return rankMap[rankValue.toLowerCase()] || '[Member]';
+  return rankMap[cleanRank] || '[Member]';
 }
 
 export function getRankColor(rankValue: string | undefined): string {
   if (!rankValue) return '#55FFFF'; // Default aqua for member
+  
+  // Clean the rank value - remove brackets if present and convert to lowercase
+  let cleanRank = rankValue.toLowerCase().replace(/[\[\]]/g, '');
+  
+  // Handle special cases
+  if (cleanRank === 'default') {
+    cleanRank = 'member';
+  }
   
   const colorMap: Record<string, string> = {
     'admin': '#FF5555',        // &c - red
@@ -78,5 +94,5 @@ export function getRankColor(rankValue: string | undefined): string {
     'member': '#55FFFF'        // &b - aqua
   };
   
-  return colorMap[rankValue.toLowerCase()] || '#55FFFF';
+  return colorMap[cleanRank] || '#55FFFF';
 }
