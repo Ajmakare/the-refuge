@@ -14,7 +14,7 @@ export default function Leaderboards() {
   useEffect(() => {
     // Fetch real leaderboards data
     console.log('Fetching leaderboards data...');
-    fetch('/data/leaderboards.json')
+    fetch('/api/leaderboards')
       .then(res => {
         console.log('Fetch response:', res.status, res.statusText);
         return res.json();
