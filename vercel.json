@@ -40,8 +40,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "NEXT_PUBLIC_ADSENSE_ID": "@adsense_id"
-  }
+  ]
 }
