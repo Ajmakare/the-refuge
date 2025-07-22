@@ -934,11 +934,14 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         p.name,
         p.registered as join_date,
         SUM(COALESCE(s.deaths, 0)) as total_deaths,
+        SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
+        COUNT(DISTINCT k.id) as player_kills,
         SUM(COALESCE(${columns.sessionLength}, 0)) as playtime,
         COUNT(DISTINCT s.id) as sessions,
         MAX(s.${columns.sessionEnd}) as last_seen
       FROM ${tables.players} p
       LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+      LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
       GROUP BY p.uuid, p.name, p.registered
       HAVING total_deaths > 0
       ORDER BY total_deaths DESC
@@ -958,7 +961,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           name: row.name,
           playtime: row.playtime || 0,
           sessions: row.sessions || 0,
-          kills: { mob: undefined, player: undefined }, // Not available in deaths query
+          kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 }, // Include both mob and PvP kills
           deaths: row.total_deaths || 0,
           afkTime: undefined, // Not available in deaths query
           avgSessionLength: undefined, // Not available in deaths query
