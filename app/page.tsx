@@ -59,11 +59,15 @@ export default function HomePage() {
       {/* Clean Navigation */}
       <nav style={{
         position: 'fixed',
-        top: '32px',
-        right: '32px',
+        top: '16px',
+        right: '16px',
         zIndex: 100
       }}>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}>
           <Link href="/" className="modern-button">
             <Home style={{ width: "16px", height: "16px" }} />
             Home

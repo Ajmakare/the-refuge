@@ -49,7 +49,6 @@ export async function GET() {
     
     // Check rate limit
     if (!checkRateLimit(clientIp)) {
-      console.warn('⚠️  Rate limit exceeded for IP:', clientIp);
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { 
@@ -63,16 +62,12 @@ export async function GET() {
       );
     }
     
-    console.log('🔄 Fetching leaderboard data from GitHub...');
-    
     const response = await fetch(GITHUB_RAW_URL, {
       // Enable caching for 5 minutes on our side
       next: { revalidate: 300 }
     });
 
     if (!response.ok) {
-      console.warn('⚠️  GitHub data not available (status:', response.status + '), using fallback data');
-      
       // Return fallback data instead of erroring
       return NextResponse.json(FALLBACK_DATA, {
         status: 200,
@@ -86,7 +81,6 @@ export async function GET() {
     }
 
     const data = await response.json();
-    console.log('✅ Successfully fetched leaderboard data from GitHub');
 
     // Return with proper caching and security headers
     return NextResponse.json(data, {
@@ -111,8 +105,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ API Error:', error, '- returning fallback data');
-    
     // Return fallback data instead of error for better UX
     return NextResponse.json(FALLBACK_DATA, {
       status: 200,

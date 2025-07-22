@@ -14,20 +14,13 @@ export default function Leaderboards() {
 
   useEffect(() => {
     // Fetch real leaderboards data
-    console.log('Fetching leaderboards data...');
     fetch('/api/leaderboards')
-      .then(res => {
-        console.log('Fetch response:', res.status, res.statusText);
-        return res.json();
-      })
+      .then(res => res.json())
       .then((data: LeaderboardData) => {
-        console.log('Leaderboards data loaded:', data);
-        console.log('Most active players:', data.mostActive?.length || 0);
         setData(data);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load leaderboard data:', err);
         setLoading(false);
       });
   }, []);
@@ -72,7 +65,6 @@ export default function Leaderboards() {
 
   const getActiveData = (): PlayerStats[] => {
     if (!data) {
-      console.log('getActiveData: No data available');
       return [];
     }
     
@@ -151,8 +143,6 @@ export default function Leaderboards() {
         result = [];
     }
     
-    console.log(`getActiveData for tab "${activeTab}":`, result?.length || 0, 'players');
-    console.log('Sample merged player data:', result[0]);
     return result || [];
   };
 
@@ -501,11 +491,15 @@ export default function Leaderboards() {
       {/* Clean Navigation */}
       <nav style={{
         position: 'fixed',
-        top: '32px',
-        right: '32px',
+        top: '16px',
+        right: '16px',
         zIndex: 100
       }}>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}>
           <Link href="/" className="modern-button secondary">
             <Home style={{ width: "16px", height: "16px" }} />
             Home
@@ -519,7 +513,7 @@ export default function Leaderboards() {
 
       {/* Main Content Container */}
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <div className="container" style={{ padding: '120px 32px 0 32px', maxWidth: '1200px', margin: '0 auto', flex: '1' }}>
+        <div className="container" style={{ padding: '140px 32px 0 32px', maxWidth: '1200px', margin: '0 auto', flex: '1' }}>
           {/* Header Section */}
           <div className="fade-in" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <h1 style={{ 
@@ -625,15 +619,11 @@ export default function Leaderboards() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {(() => {
                   const activeData = getActiveData();
-                  console.log('Rendering leaderboard with data:', activeData);
-                  console.log('Data length:', activeData.length);
-                  console.log('First player:', activeData[0]);
                   
                   return activeData.length > 0 ? (
-                    activeData.map((player, index) => {
-                      console.log(`Rendering player ${index + 1}:`, player.name);
-                      return <PlayerCard key={player.uuid} player={player} rank={index + 1} />;
-                    })
+                    activeData.map((player, index) => (
+                      <PlayerCard key={player.uuid} player={player} rank={index + 1} />
+                    ))
                   ) : (
                     <div style={{ 
                       textAlign: 'center', 
