@@ -585,6 +585,13 @@ function detectColumnStructure(db, tables, callback) {
                                 columnNames.includes('session_length') ? 'session_length' :
                                 columnNames.includes('time_played') ? 'time_played' : null;
         
+        // For Legacy PLAN v4, calculate playtime from session times
+        columnMapping.sessionLength = columnNames.includes('session_length') ? 'session_length' : 
+                                     columnNames.includes('length') ? 'length' :
+                                     columnNames.includes('playtime') ? 'playtime' : 
+                                     // Calculate from session_end - session_start - afk_time for Legacy PLAN
+                                     '(session_end - session_start - COALESCE(afk_time, 0))';
+        
         // Check for session-based data that needs aggregation
         columnMapping.sessionStart = columnNames.includes('session_start') ? 'session_start' : null;
         columnMapping.sessionEnd = columnNames.includes('session_end') ? 'session_end' : null;
