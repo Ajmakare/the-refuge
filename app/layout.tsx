@@ -23,11 +23,11 @@ export const metadata: Metadata = {
   authors: [{ name: "The Refuge Team" }],
   creator: "The Refuge",
   publisher: "The Refuge",
-  metadataBase: new URL('https://the-refuge.vercel.app'),
+  metadataBase: new URL('https://therefuge-minecraft.vercel.app'),
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://the-refuge.vercel.app',
+    url: 'https://therefuge-minecraft.vercel.app',
     siteName: 'The Refuge Minecraft Server',
     title: 'The Refuge - Minecraft Server | Semi-Vanilla PvE Survival',
     description: 'Join The Refuge, a 6-year-strong semi-vanilla PvE survival Minecraft server with deep lore, democratic community, and rich gameplay.',

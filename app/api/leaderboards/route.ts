@@ -96,7 +96,7 @@ export async function GET() {
         'X-XSS-Protection': '1; mode=block',
         // CORS headers (restrictive)
         'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
-          ? 'https://the-refuge.vercel.app' 
+          ? 'https://therefuge-minecraft.vercel.app' 
           : '*',
         'Access-Control-Allow-Methods': 'GET',
         'Access-Control-Allow-Headers': 'Content-Type',
