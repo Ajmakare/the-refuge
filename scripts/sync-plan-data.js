@@ -688,7 +688,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         SELECT 
           p.uuid,
           p.name,
-          SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) as playtime,
+          SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart} - COALESCE(s.afk_time, 0), 0)) as playtime,
           COUNT(s.id) as sessions,
           SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
           SUM(COALESCE(s.afk_time, 0)) as afk_time,
