@@ -862,7 +862,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           SELECT 
             p.uuid, p.name, p.registered as join_date,
             COALESCE(SUM(s.mob_kills), 0) as mob_kills,
-            COALESCE(SUM(s.${columns.sessionLength}), 0) as playtime,
+            COALESCE(SUM(${columns.sessionLength}), 0) as playtime,
             COUNT(DISTINCT s.id) as sessions,
             MAX(s.${columns.sessionEnd}) as last_seen
           FROM ${tables.players} p
@@ -934,7 +934,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         p.name,
         p.registered as join_date,
         SUM(COALESCE(s.deaths, 0)) as total_deaths,
-        SUM(COALESCE(s.${columns.sessionLength}, 0)) as playtime,
+        SUM(COALESCE(${columns.sessionLength}, 0)) as playtime,
         COUNT(DISTINCT s.id) as sessions,
         MAX(s.${columns.sessionEnd}) as last_seen
       FROM ${tables.players} p
