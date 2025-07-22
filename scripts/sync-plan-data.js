@@ -835,7 +835,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           p.uuid, p.name, p.registered as join_date,
           ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) as mob_kills` : '0 as mob_kills'},
           ${playerKillsCol !== '0' ? `COALESCE(k.${playerKillsCol}, 0) as player_kills` : '0 as player_kills'},
-          ${tables.sessions && columns.playtime ? `COALESCE(s.${columns.playtime}, 0) as playtime,` : '0 as playtime,'}
+          0 as playtime,
           ${columns.sessions ? `COALESCE(s.${columns.sessions}, 0) as sessions,` : '0 as sessions,'}
           ${columns.lastSeen ? `COALESCE(s.${columns.lastSeen}, p.registered) as last_seen` : 'p.registered as last_seen'}
         FROM ${tables.players} p
@@ -876,7 +876,11 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           SELECT 
             p.uuid, p.name, p.registered as join_date,
             COALESCE(SUM(s.mob_kills), 0) as mob_kills,
-            COALESCE(SUM(${columns.sessionLength}), 0) as playtime,
+            COALESCE(SUM(
+              CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
+                   THEN MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
+                   ELSE 0 END
+            ), 0) as playtime,
             COUNT(DISTINCT s.id) as sessions,
             MAX(s.${columns.sessionEnd}) as last_seen
           FROM ${tables.players} p
@@ -950,7 +954,11 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         SUM(COALESCE(s.deaths, 0)) as total_deaths,
         SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
         COUNT(DISTINCT k.id) as player_kills,
-        SUM(COALESCE(${columns.sessionLength}, 0)) as playtime,
+        COALESCE(SUM(
+          CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
+               THEN MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
+               ELSE 0 END
+        ), 0) as playtime,
         COUNT(DISTINCT s.id) as sessions,
         MAX(s.${columns.sessionEnd}) as last_seen
       FROM ${tables.players} p
