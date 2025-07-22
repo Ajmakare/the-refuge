@@ -359,7 +359,7 @@ export default function Leaderboards() {
                 color: (player.avgSessionLength || 0) > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
                 fontFamily: 'Inter, sans-serif'
               }}>
-                {player.avgSessionLength || 0}m
+                {(player.avgSessionLength || 0) > 0 ? `${player.avgSessionLength}m` : '0'}
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
                 Avg Session
