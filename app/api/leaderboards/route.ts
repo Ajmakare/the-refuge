@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 
-const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/aidanfoo96/the-refuge/data/public/data/leaderboards.json';
+const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Ajmakare/the-refuge/data/public/data/leaderboards.json';
+
+// Fallback data for when GitHub data is not available
+const FALLBACK_DATA = {
+  mostActive: [],
+  topKillers: [],
+  mostDeaths: [],
+  lastUpdated: new Date().toISOString()
+};
 
 export async function GET() {
   try {
@@ -12,12 +20,22 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      console.error('❌ Failed to fetch from GitHub:', response.status, response.statusText);
-      throw new Error(`GitHub fetch failed: ${response.status}`);
+      console.warn('⚠️  GitHub data not available (status:', response.status + '), using fallback data');
+      
+      // Return fallback data instead of erroring
+      return NextResponse.json(FALLBACK_DATA, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          // Cache fallback for shorter time
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'X-Data-Source': 'fallback',
+        },
+      });
     }
 
     const data = await response.json();
-    console.log('✅ Successfully fetched leaderboard data');
+    console.log('✅ Successfully fetched leaderboard data from GitHub');
 
     // Return with proper caching headers
     return NextResponse.json(data, {
@@ -26,6 +44,7 @@ export async function GET() {
         'Content-Type': 'application/json',
         // Cache for 5 minutes in browsers/CDN
         'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'X-Data-Source': 'github',
         // Add CORS headers if needed
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
@@ -34,21 +53,16 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ API Error:', error);
+    console.error('❌ API Error:', error, '- returning fallback data');
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch leaderboard data',
-        message: error instanceof Error ? error.message : 'Unknown error'
+    // Return fallback data instead of error for better UX
+    return NextResponse.json(FALLBACK_DATA, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=60, s-maxage=60',
+        'X-Data-Source': 'fallback-error',
       },
-      { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          // Don't cache errors
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        }
-      }
-    );
+    });
   }
 }
