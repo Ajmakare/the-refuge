@@ -688,10 +688,22 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         SELECT 
           p.uuid,
           p.name,
-          SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart} - COALESCE(s.afk_time, 0), 0)) as playtime,
-          COUNT(s.id) as sessions,
-          SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
-          SUM(COALESCE(s.afk_time, 0)) as afk_time,
+          COALESCE(SUM(
+            CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
+                 THEN MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
+                 ELSE 0 END
+          ), 0) as playtime,
+          SUM(CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000 THEN 1 ELSE 0 END) as sessions,
+          COALESCE(SUM(
+            CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
+                 THEN COALESCE(s.mob_kills, 0)
+                 ELSE 0 END
+          ), 0) as mob_kills,
+          COALESCE(SUM(
+            CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
+                 THEN COALESCE(s.afk_time, 0)
+                 ELSE 0 END
+          ), 0) as afk_time,
           p.registered as join_date,
           MAX(s.${columns.sessionEnd}) as last_seen,
           ext.col_2_value as player_rank,

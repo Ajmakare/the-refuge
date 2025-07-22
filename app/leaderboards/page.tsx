@@ -156,7 +156,7 @@ export default function Leaderboards() {
         return { 
           icon: <Clock style={{ width: "20px", height: "20px" }} />, 
           title: 'Most Active Players',
-          description: 'Players ranked by recent activity (last 14 days) + engagement'
+          description: 'Players ranked by recent activity in the last 14 days'
         };
       case 'killers': 
         return { 
