@@ -733,6 +733,19 @@ export default function Leaderboards() {
                 }}>
                   {currentTab.description}
                 </p>
+                {activeTab === 'active' && (
+                  <div style={{ 
+                    fontSize: '13px', 
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontFamily: 'Inter, sans-serif',
+                    marginBottom: '8px',
+                    maxWidth: '600px',
+                    margin: '0 auto 8px auto',
+                    lineHeight: '1.4'
+                  }}>
+                    <strong>How rankings work:</strong> Players are ranked by an activity score that considers recent playtime, session frequency, consistency, and engagement - not just total hours played.
+                  </div>
+                )}
                 {data && (
                   <p style={{ 
                     fontSize: '14px', 
