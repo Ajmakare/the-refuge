@@ -684,6 +684,11 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
     } else if (tables.sessions && columns.sessionStart && columns.sessionEnd && columns.userId) {
       // Aggregated session data query (for your database structure)
       console.log('📊 Aggregating session data from individual session records...');
+      
+      // Debug: Calculate 14 days ago timestamp
+      const fourteenDaysAgo = (Date.now() - (14 * 24 * 60 * 60 * 1000));
+      const fourteenDaysAgoSQL = `(strftime('%s', 'now') - 1209600) * 1000`;
+      console.log(`🔍 Debug: 14 days ago timestamp: ${fourteenDaysAgo} (${new Date(fourteenDaysAgo).toISOString()})`);
       const aggregatedPlayersQuery = `
         SELECT 
           p.uuid,
@@ -1016,9 +1021,11 @@ function mergePlayerData(leaderboardData) {
       uuid: existing.uuid || newData.uuid,
       name: existing.name || newData.name,
       // Use the highest values for cumulative stats, but only if both are defined
-      playtime: existing.playtime !== undefined && newData.playtime !== undefined 
-        ? Math.max(existing.playtime, newData.playtime)
-        : existing.playtime !== undefined ? existing.playtime : newData.playtime || 0,
+      playtime: existing.activityScore !== undefined ? existing.playtime 
+        : (newData.activityScore !== undefined ? newData.playtime 
+        : (existing.playtime !== undefined && newData.playtime !== undefined 
+          ? Math.max(existing.playtime, newData.playtime)
+          : existing.playtime !== undefined ? existing.playtime : newData.playtime || 0)),
       sessions: existing.sessions !== undefined && newData.sessions !== undefined 
         ? Math.max(existing.sessions, newData.sessions)
         : existing.sessions !== undefined ? existing.sessions : newData.sessions || 0,
