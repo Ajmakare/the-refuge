@@ -12,6 +12,7 @@ export default function Leaderboards() {
   const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'deaths'>('active');
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     // Fetch real leaderboards data
     fetch('/api/leaderboards')
@@ -488,32 +489,22 @@ export default function Leaderboards() {
         </div>
       </div>
 
-      {/* Clean Navigation */}
-      <nav style={{
-        position: 'fixed',
-        top: '16px',
-        right: '16px',
-        zIndex: 100
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          gap: '8px',
-          flexWrap: 'wrap'
-        }}>
-          <Link href="/" className="modern-button secondary">
-            <Home style={{ width: "16px", height: "16px" }} />
-            Home
-          </Link>
-          <Link href="/leaderboards" className="modern-button">
-            <BarChart3 style={{ width: "16px", height: "16px" }} />
-            Leaderboards
-          </Link>
-        </div>
-      </nav>
-
       {/* Main Content Container */}
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <div className="container" style={{ padding: '140px 32px 0 32px', maxWidth: '1200px', margin: '0 auto', flex: '1' }}>
+        <div className="container" style={{ 
+          padding: '40px 32px 0 32px', 
+          maxWidth: '1200px', 
+          margin: '0 auto', 
+          flex: '1' 
+        }}>
+          {/* Navigation inside content */}
+          <div style={{ textAlign: 'right', marginBottom: '32px' }}>
+            <Link href="/" className="modern-button secondary">
+              <Home style={{ width: "16px", height: "16px" }} />
+              Home
+            </Link>
+          </div>
+
           {/* Header Section */}
           <div className="fade-in" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <h1 style={{ 
