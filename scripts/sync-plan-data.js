@@ -829,12 +829,13 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           leaderboardData.topKillers = rows.map(row => ({
             uuid: row.uuid,
             name: row.name,
-            playtime: 0,
-            sessions: 0,
+            playtime: undefined, // Let merge function handle this
+            sessions: undefined, // Let merge function handle this
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
-            deaths: 0,
-            afkTime: 0,
-                        lastSeen: new Date(row.join_date).toISOString(),
+            deaths: undefined, // Let merge function handle this
+            afkTime: undefined, // Let merge function handle this
+            avgSessionLength: undefined, // Let merge function handle this
+            lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
         }
@@ -882,12 +883,13 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           leaderboardData.topKillers = rows.map(row => ({
             uuid: row.uuid,
             name: row.name,
-            playtime: 0,
-            sessions: 0,
+            playtime: undefined, // Let merge function handle this
+            sessions: undefined, // Let merge function handle this
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
-            deaths: 0,
-            afkTime: 0,
-                        lastSeen: new Date(row.join_date).toISOString(),
+            deaths: undefined, // Let merge function handle this
+            afkTime: undefined, // Let merge function handle this
+            avgSessionLength: undefined, // Let merge function handle this
+            lastSeen: new Date(row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
         }
@@ -935,11 +937,12 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         leaderboardData.mostDeaths = rows.map(row => ({
           uuid: row.uuid,
           name: row.name,
-          playtime: 0,
-          sessions: 0,
-          kills: { mob: 0, player: 0 },
+          playtime: undefined, // Let merge function handle this
+          sessions: undefined, // Let merge function handle this
+          kills: { mob: undefined, player: undefined }, // Let merge function handle this
           deaths: row.total_deaths || 0,
-          afkTime: 0,
+          afkTime: undefined, // Let merge function handle this
+          avgSessionLength: undefined, // Let merge function handle this
           lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));
@@ -968,18 +971,32 @@ function mergePlayerData(leaderboardData) {
     const merged = {
       uuid: existing.uuid || newData.uuid,
       name: existing.name || newData.name,
-      // Use the highest values for cumulative stats
-      playtime: Math.max(existing.playtime || 0, newData.playtime || 0),
-      sessions: Math.max(existing.sessions || 0, newData.sessions || 0),
+      // Use the highest values for cumulative stats, but only if both are defined
+      playtime: existing.playtime !== undefined && newData.playtime !== undefined 
+        ? Math.max(existing.playtime, newData.playtime)
+        : existing.playtime !== undefined ? existing.playtime : newData.playtime || 0,
+      sessions: existing.sessions !== undefined && newData.sessions !== undefined 
+        ? Math.max(existing.sessions, newData.sessions)
+        : existing.sessions !== undefined ? existing.sessions : newData.sessions || 0,
       kills: {
-        mob: Math.max(existing.kills?.mob || 0, newData.kills?.mob || 0),
-        player: Math.max(existing.kills?.player || 0, newData.kills?.player || 0)
+        mob: existing.kills?.mob !== undefined && newData.kills?.mob !== undefined 
+          ? Math.max(existing.kills.mob, newData.kills.mob)
+          : existing.kills?.mob !== undefined ? existing.kills.mob : newData.kills?.mob || 0,
+        player: existing.kills?.player !== undefined && newData.kills?.player !== undefined 
+          ? Math.max(existing.kills.player, newData.kills.player)
+          : existing.kills?.player !== undefined ? existing.kills.player : newData.kills?.player || 0
       },
-      deaths: Math.max(existing.deaths || 0, newData.deaths || 0),
-      afkTime: Math.max(existing.afkTime || 0, newData.afkTime || 0),
+      deaths: existing.deaths !== undefined && newData.deaths !== undefined 
+        ? Math.max(existing.deaths, newData.deaths)
+        : existing.deaths !== undefined ? existing.deaths : newData.deaths || 0,
+      afkTime: existing.afkTime !== undefined && newData.afkTime !== undefined 
+        ? Math.max(existing.afkTime, newData.afkTime)
+        : existing.afkTime !== undefined ? existing.afkTime : newData.afkTime || 0,
       // Keep specialized fields where relevant
-      avgSessionLength: existing.avgSessionLength || newData.avgSessionLength || 0,
-      activityScore: existing.activityScore || newData.activityScore || 0,
+      avgSessionLength: existing.avgSessionLength !== undefined ? existing.avgSessionLength 
+        : newData.avgSessionLength || 0,
+      activityScore: existing.activityScore !== undefined ? existing.activityScore 
+        : newData.activityScore || 0,
       // Use the most recent timestamp
       lastSeen: (existing.lastSeen && new Date(existing.lastSeen) > new Date(newData.lastSeen || 0)) 
                  ? existing.lastSeen : (newData.lastSeen || existing.lastSeen),
