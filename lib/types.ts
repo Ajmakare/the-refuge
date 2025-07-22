@@ -17,7 +17,7 @@ export interface PlayerStats {
   creativeTime?: number;
   adventureTime?: number;
   afkTime?: number;
-  avgSessionLength?: number; // Average session length in minutes
+  rank?: string; // Player rank from LuckPerms
   activityScore?: number; // Internal activity calculation for sorting
 }
 

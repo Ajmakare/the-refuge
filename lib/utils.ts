@@ -45,3 +45,38 @@ export function formatDateTime(dateString: string): string {
     hour12: true
   });
 }
+
+// Rank formatting and color utilities
+export function formatRank(rankValue: string | undefined): string {
+  if (!rankValue) return '[Member]';
+  
+  const rankMap: Record<string, string> = {
+    'admin': '[Admin]',
+    'moderator': '[Moderator]',
+    'helper': '[Helper]',
+    'trusted': '[Trusted]',
+    'donatorplus': '[Donator+]',
+    'donator': '[Donator]',
+    'friend': '[Friend]',
+    'member': '[Member]'
+  };
+  
+  return rankMap[rankValue.toLowerCase()] || '[Member]';
+}
+
+export function getRankColor(rankValue: string | undefined): string {
+  if (!rankValue) return '#55FFFF'; // Default aqua for member
+  
+  const colorMap: Record<string, string> = {
+    'admin': '#FF5555',        // &c - red
+    'moderator': '#FFAA00',    // &6 - gold
+    'helper': '#5555FF',       // &9 - blue
+    'trusted': '#FF55FF',      // &5 - dark purple
+    'donatorplus': '#55FF55',  // &a - green
+    'donator': '#55FF55',      // &a - green
+    'friend': '#FFFF55',       // &e - yellow
+    'member': '#55FFFF'        // &b - aqua
+  };
+  
+  return colorMap[rankValue.toLowerCase()] || '#55FFFF';
+}

@@ -4,7 +4,7 @@ import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star } from "lucide-react
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
-import { formatPlaytime, formatNumber, formatDate, formatDateTime } from "@/lib/utils";
+import { formatPlaytime, formatNumber, formatDate, formatDateTime, formatRank, getRankColor as getPlayerRankColor } from "@/lib/utils";
 
 
 export default function Leaderboards() {
@@ -97,7 +97,7 @@ export default function Leaderboards() {
           },
           deaths: Math.max(existing.deaths || 0, newData.deaths || 0),
           afkTime: Math.max(existing.afkTime || 0, newData.afkTime || 0),
-          avgSessionLength: Math.max(existing.avgSessionLength || 0, newData.avgSessionLength || 0),
+          rank: existing.rank || newData.rank,
           activityScore: Math.max(existing.activityScore || 0, newData.activityScore || 0),
           // Use most recent timestamps
           lastSeen: new Date(existing.lastSeen).getTime() > new Date(newData.lastSeen).getTime() ? 
@@ -486,6 +486,20 @@ export default function Leaderboards() {
           <div className="player-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '8px' }}>
             <div style={{ textAlign: 'center', padding: '8px 4px' }}>
               <div style={{ 
+                fontSize: '12px', 
+                fontWeight: '600',
+                color: getPlayerRankColor(player.rank),
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2'
+              }}>
+                {formatRank(player.rank)}
+              </div>
+              <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
+                Rank
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '8px 4px' }}>
+              <div style={{ 
                 fontSize: '14px', 
                 fontWeight: '600',
                 color: player.kills.mob > 0 ? 'var(--success)' : 'rgba(255, 255, 255, 0.4)',
@@ -510,20 +524,6 @@ export default function Leaderboards() {
               </div>
               <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
                 PvP
-              </div>
-            </div>
-            <div style={{ textAlign: 'center', padding: '8px 4px' }}>
-              <div style={{ 
-                fontSize: '14px', 
-                fontWeight: '600',
-                color: (player.avgSessionLength || 0) > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
-                fontFamily: 'Inter, sans-serif',
-                lineHeight: '1.2'
-              }}>
-                {(player.avgSessionLength || 0) > 0 ? player.avgSessionLength + 'm' : '0'}
-              </div>
-              <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
-                Session
               </div>
             </div>
             <div style={{ textAlign: 'center', padding: '8px 4px' }}>

@@ -694,7 +694,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           SUM(COALESCE(s.afk_time, 0)) as afk_time,
           p.registered as join_date,
           MAX(s.${columns.sessionEnd}) as last_seen,
-          CAST(AVG(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) / (60 * 1000) AS INTEGER) as avg_session_length_minutes,
+          ext.col_2_value as player_rank,
           -- Calculate activity score with balanced weighting (SQLite compatible)
           CAST(
             -- Recent active time (last 14 days) - 40% weight
@@ -720,7 +720,9 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           AS INTEGER) as activity_score
         FROM ${tables.players} p
         LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
-        GROUP BY p.uuid, p.name, p.registered
+        LEFT JOIN plan_extension_user_table_values ext ON p.uuid = ext.uuid 
+          AND ext.col_1_value = 'primarygroup'
+        GROUP BY p.uuid, p.name, p.registered, ext.col_2_value
         HAVING SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) > 0
         ORDER BY activity_score DESC, playtime DESC
         LIMIT ?
@@ -766,7 +768,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: row.mob_kills || 0, player: 0 },
             deaths: 0,
             afkTime: row.afk_time || 0,
-            avgSessionLength: row.avg_session_length_minutes || 0,
+            rank: row.player_rank || null,
             activityScore: row.activity_score || 0, // Internal scoring metric
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
@@ -845,7 +847,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
             deaths: undefined, // Not available in kills query
             afkTime: undefined, // Not available in kills query
-            avgSessionLength: undefined, // Not available in kills query
+            rank: null, // Not available in kills query
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -905,7 +907,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
             deaths: undefined, // Not available in combined kills query
             afkTime: undefined, // Not available in combined kills query
-            avgSessionLength: undefined, // Not available in combined kills query
+            rank: null, // Not available in combined kills query
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -964,7 +966,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 }, // Include both mob and PvP kills
           deaths: row.total_deaths || 0,
           afkTime: undefined, // Not available in deaths query
-          avgSessionLength: undefined, // Not available in deaths query
+          rank: null, // Not available in deaths query
           lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));
@@ -1015,8 +1017,7 @@ function mergePlayerData(leaderboardData) {
         ? Math.max(existing.afkTime, newData.afkTime)
         : existing.afkTime !== undefined ? existing.afkTime : newData.afkTime || 0,
       // Keep specialized fields where relevant
-      avgSessionLength: existing.avgSessionLength !== undefined ? existing.avgSessionLength 
-        : newData.avgSessionLength || 0,
+      rank: existing.rank !== null ? existing.rank : newData.rank,
       activityScore: existing.activityScore !== undefined ? existing.activityScore 
         : newData.activityScore || 0,
       // Use the most recent timestamp
