@@ -80,59 +80,82 @@ export default function Leaderboards() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showInfo]);
 
-  const getActiveData = (): PlayerStats[] => {
-    if (!data) {
-      return [];
-    }
+  // Helper function to merge all player data consistently
+  const mergeAllPlayerData = (): Map<string, PlayerStats> => {
+    if (!data) return new Map();
     
-    // Create comprehensive player data by merging ALL leaderboard sources
-    const mergeAllPlayerData = (): Map<string, PlayerStats> => {
-      const playerMap = new Map<string, PlayerStats>();
+    const playerMap = new Map<string, PlayerStats>();
+    
+    // Helper function to merge player data with priority-based field selection
+    const mergePlayer = (uuid: string, newData: PlayerStats) => {
+      const existing = playerMap.get(uuid);
+      if (!existing) {
+        playerMap.set(uuid, { 
+          ...newData, 
+          kills: newData.kills || { mob: 0, player: 0 }
+        });
+        return;
+      }
       
-      // Helper function to merge player data with priority-based field selection
-      const mergePlayer = (uuid: string, newData: PlayerStats) => {
-        const existing = playerMap.get(uuid);
-        if (!existing) {
-          playerMap.set(uuid, { 
-            ...newData, 
-            kills: newData.kills || { mob: 0, player: 0 }
-          });
-          return;
-        }
-        
-        // Merge with intelligent field prioritization
-        const merged: PlayerStats = {
-          uuid: existing.uuid,
-          name: existing.name,
-          // Always use the best available data for each field
-          playtime: Math.max(existing.playtime || 0, newData.playtime || 0),
-          sessions: Math.max(existing.sessions || 0, newData.sessions || 0),
-          kills: {
-            mob: Math.max(existing.kills?.mob || 0, newData.kills?.mob || 0),
-            player: Math.max(existing.kills?.player || 0, newData.kills?.player || 0)
-          },
-          deaths: Math.max(existing.deaths || 0, newData.deaths || 0),
-          afkTime: Math.max(existing.afkTime || 0, newData.afkTime || 0),
-          rank: existing.rank || newData.rank,
-          activityScore: Math.max(existing.activityScore || 0, newData.activityScore || 0),
-          // Use most recent timestamps
-          lastSeen: new Date(existing.lastSeen).getTime() > new Date(newData.lastSeen).getTime() ? 
-                   existing.lastSeen : newData.lastSeen,
-          joinDate: new Date(existing.joinDate).getTime() < new Date(newData.joinDate).getTime() ? 
-                   existing.joinDate : newData.joinDate
-        };
-        
-        playerMap.set(uuid, merged);
+      // Merge with intelligent field prioritization
+      const merged: PlayerStats = {
+        uuid: existing.uuid,
+        name: existing.name,
+        // Always use the best available data for each field
+        playtime: Math.max(existing.playtime || 0, newData.playtime || 0),
+        sessions: Math.max(existing.sessions || 0, newData.sessions || 0),
+        kills: {
+          mob: Math.max(existing.kills?.mob || 0, newData.kills?.mob || 0),
+          player: Math.max(existing.kills?.player || 0, newData.kills?.player || 0)
+        },
+        deaths: Math.max(existing.deaths || 0, newData.deaths || 0),
+        afkTime: Math.max(existing.afkTime || 0, newData.afkTime || 0),
+        rank: existing.rank || newData.rank,
+        activityScore: Math.max(existing.activityScore || 0, newData.activityScore || 0),
+        // Use most recent timestamps
+        lastSeen: new Date(existing.lastSeen).getTime() > new Date(newData.lastSeen).getTime() ? 
+                 existing.lastSeen : newData.lastSeen,
+        joinDate: new Date(existing.joinDate).getTime() < new Date(newData.joinDate).getTime() ? 
+                 existing.joinDate : newData.joinDate
       };
       
-      // Merge data from all leaderboard sources
-      data.mostActive.forEach(player => mergePlayer(player.uuid, player));
-      data.topKillers.forEach(player => mergePlayer(player.uuid, player));
-      data.mostDeaths.forEach(player => mergePlayer(player.uuid, player));
-      
-      return playerMap;
+      playerMap.set(uuid, merged);
     };
     
+    // Merge data from all leaderboard sources
+    data.mostActive.forEach(player => mergePlayer(player.uuid, player));
+    data.topKillers.forEach(player => mergePlayer(player.uuid, player));
+    data.mostDeaths.forEach(player => mergePlayer(player.uuid, player));
+    
+    return playerMap;
+  };
+
+  // Get the actual #1 players for each category (matches what's shown in leaderboards)
+  const getTopPlayers = () => {
+    const completePlayerData = mergeAllPlayerData();
+    const allPlayers = Array.from(completePlayerData.values());
+    
+    const mostActive = allPlayers
+      .filter(p => p.playtime > 0)
+      .sort((a, b) => {
+        const scoreA = a.activityScore || a.playtime;
+        const scoreB = b.activityScore || b.playtime;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        return new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime();
+      })[0];
+      
+    const topKiller = allPlayers
+      .filter(p => (p.kills.mob + p.kills.player) > 0)
+      .sort((a, b) => (b.kills.mob + b.kills.player) - (a.kills.mob + a.kills.player))[0];
+      
+    const mostDeaths = allPlayers
+      .filter(p => p.deaths > 0)
+      .sort((a, b) => b.deaths - a.deaths)[0];
+      
+    return { mostActive, topKiller, mostDeaths };
+  };
+
+  const getActiveData = (): PlayerStats[] => {
     const completePlayerData = mergeAllPlayerData();
     const allPlayers = Array.from(completePlayerData.values());
     
@@ -884,58 +907,206 @@ export default function Leaderboards() {
                   Server Stats
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
-                      Most Active:
-                    </span>
-                    <span style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '700', 
-                      color: 'var(--success)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {data && data.mostActive[0] ? data.mostActive[0].name : 'Loading...'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
-                      Top Killer:
-                    </span>
-                    <span style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '700', 
-                      color: 'var(--error)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {data && data.topKillers[0] ? data.topKillers[0].name : 'No data yet'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
-                      Most Deaths:
-                    </span>
-                    <span style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '700', 
-                      color: 'var(--warning)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {data && data.mostDeaths[0] ? data.mostDeaths[0].name : 'No data yet'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
-                      Last Updated:
-                    </span>
-                    <span style={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600', 
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
-                      {data ? new Date(data.lastUpdated).toLocaleTimeString() : '--:--'}
-                    </span>
-                  </div>
+                  {(() => {
+                    const topPlayers = getTopPlayers();
+                    return (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
+                            Most Active:
+                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {topPlayers.mostActive && (
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
+                                flexShrink: 0
+                              }}>
+                                <img 
+                                  src={'https://mc-heads.net/avatar/' + topPlayers.mostActive.name + '/32'}
+                                  alt={topPlayers.mostActive.name + "'s head"}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) {
+                                      fallback.style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                                <div style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  borderRadius: '6px',
+                                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                  display: 'none',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '12px',
+                                  fontWeight: '700',
+                                  color: 'white',
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0
+                                }}>
+                                  {topPlayers.mostActive.name.charAt(0).toUpperCase()}
+                                </div>
+                              </div>
+                            )}
+                            <span style={{ 
+                              fontSize: '16px', 
+                              fontWeight: '700', 
+                              color: 'var(--success)',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              {topPlayers.mostActive ? topPlayers.mostActive.name : 'Loading...'}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
+                            Top Killer:
+                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {topPlayers.topKiller && (
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
+                                flexShrink: 0
+                              }}>
+                                <img 
+                                  src={'https://mc-heads.net/avatar/' + topPlayers.topKiller.name + '/32'}
+                                  alt={topPlayers.topKiller.name + "'s head"}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) {
+                                      fallback.style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                                <div style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  borderRadius: '6px',
+                                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                  display: 'none',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '12px',
+                                  fontWeight: '700',
+                                  color: 'white',
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0
+                                }}>
+                                  {topPlayers.topKiller.name.charAt(0).toUpperCase()}
+                                </div>
+                              </div>
+                            )}
+                            <span style={{ 
+                              fontSize: '16px', 
+                              fontWeight: '700', 
+                              color: 'var(--error)',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              {topPlayers.topKiller ? topPlayers.topKiller.name : 'No data yet'}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
+                            Most Deaths:
+                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {topPlayers.mostDeaths && (
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
+                                flexShrink: 0
+                              }}>
+                                <img 
+                                  src={'https://mc-heads.net/avatar/' + topPlayers.mostDeaths.name + '/32'}
+                                  alt={topPlayers.mostDeaths.name + "'s head"}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) {
+                                      fallback.style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                                <div style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  borderRadius: '6px',
+                                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                  display: 'none',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '12px',
+                                  fontWeight: '700',
+                                  color: 'white',
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0
+                                }}>
+                                  {topPlayers.mostDeaths.name.charAt(0).toUpperCase()}
+                                </div>
+                              </div>
+                            )}
+                            <span style={{ 
+                              fontSize: '16px', 
+                              fontWeight: '700', 
+                              color: 'var(--warning)',
+                              fontFamily: 'Inter, sans-serif'
+                            }}>
+                              {topPlayers.mostDeaths ? topPlayers.mostDeaths.name : 'No data yet'}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'Inter, sans-serif' }}>
+                            Last Updated:
+                          </span>
+                          <span style={{ 
+                            fontSize: '14px', 
+                            fontWeight: '600', 
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            fontFamily: 'Inter, sans-serif'
+                          }}>
+                            {data ? new Date(data.lastUpdated).toLocaleTimeString() : '--:--'}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
