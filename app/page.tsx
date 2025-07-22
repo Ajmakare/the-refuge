@@ -1,5 +1,5 @@
 "use client";
-import { Shield, Pickaxe, Home, BarChart3, Vote, Calendar } from "lucide-react";
+import { Shield, Pickaxe, Vote, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -56,28 +56,6 @@ export default function HomePage() {
         zIndex: -1
       }} />
       
-      {/* Clean Navigation */}
-      <nav style={{
-        position: 'fixed',
-        top: '16px',
-        right: '16px',
-        zIndex: 100
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          gap: '8px',
-          flexWrap: 'wrap'
-        }}>
-          <Link href="/" className="modern-button">
-            <Home style={{ width: "16px", height: "16px" }} />
-            Home
-          </Link>
-          <Link href="/leaderboards" className="modern-button secondary">
-            <BarChart3 style={{ width: "16px", height: "16px" }} />
-            Leaderboards
-          </Link>
-        </div>
-      </nav>
 
 
       <div className="container" style={{ padding: '0 32px', maxWidth: '900px' }}>
@@ -158,6 +136,29 @@ export default function HomePage() {
               >
                 📊 View Leaderboards
               </Link>
+            </div>
+            
+            {/* PlanetMinecraft Link */}
+            <div className="fade-in" style={{ 
+              display: "flex", 
+              justifyContent: "center", 
+              marginTop: "32px"
+            }}>
+              <a 
+                href="https://www.planetminecraft.com/server/the-refuge-a-brand-new-vanilla-pve-server-whitelist-discord"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="modern-button secondary"
+                style={{ 
+                  fontSize: '16px', 
+                  padding: '12px 24px',
+                  backgroundColor: 'rgba(46, 160, 67, 0.1)',
+                  borderColor: 'rgba(46, 160, 67, 0.3)',
+                  color: 'white'
+                }}
+              >
+                🌍 View on PlanetMinecraft
+              </a>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star, Info } from "lucide-react";
+import { Trophy, Clock, Sword, Home, Crown, Star, Info } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
@@ -968,6 +968,15 @@ export default function Leaderboards() {
                 fontSize: '14px'
               }}>
                 <p>&copy; 2024 The Refuge Minecraft Server. A legacy that&apos;s here to stay. ❤️</p>
+                <div style={{ marginTop: '12px', display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                  <Link href="/privacy" style={{ color: 'rgba(255, 255, 255, 0.4)', textDecoration: 'none' }}>
+                    Privacy Policy
+                  </Link>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+                  <Link href="/terms" style={{ color: 'rgba(255, 255, 255, 0.4)', textDecoration: 'none' }}>
+                    Terms of Service
+                  </Link>
+                </div>
               </div>
             </div>
             
