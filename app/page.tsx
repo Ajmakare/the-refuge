@@ -1,6 +1,7 @@
 "use client";
 import { Shield, Pickaxe, Home, BarChart3, Vote, Calendar } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect } from "react";
 
 export default function HomePage() {
@@ -105,9 +106,12 @@ export default function HomePage() {
         {/* Expanded Hero Section */}
         <div style={{ padding: '60px 0', display: 'flex', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
           <div style={{ width: '100%', textAlign: 'center' }}>
-            <img 
+            <Image 
               src="/images/fontbolt.png" 
-              alt="The Refuge" 
+              alt="The Refuge - Minecraft Server Logo" 
+              width={1400}
+              height={400}
+              priority
               className="fade-in hero-logo"
               style={{ 
                 maxWidth: '1400px',
@@ -369,6 +373,15 @@ export default function HomePage() {
                 fontSize: '14px'
               }}>
                 <p>&copy; 2024 The Refuge Minecraft Server. A legacy that&apos;s here to stay. ❤️</p>
+                <div style={{ marginTop: '12px', display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                  <Link href="/privacy" style={{ color: 'rgba(255, 255, 255, 0.4)', textDecoration: 'none' }}>
+                    Privacy Policy
+                  </Link>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+                  <Link href="/terms" style={{ color: 'rgba(255, 255, 255, 0.4)', textDecoration: 'none' }}>
+                    Terms of Service
+                  </Link>
+                </div>
               </div>
             </div>
             

@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://the-refuge.vercel.app/sitemap.xml
+
+# Disallow sensitive areas
+Disallow: /api/
+Disallow: /_next/
+Disallow: /404
+Disallow: /500
+
+# Allow important pages
+Allow: /
+Allow: /leaderboards
+Allow: /privacy
+Allow: /terms

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
 import { formatPlaytime, formatNumber, formatDate, formatDateTime } from "@/lib/utils";
 
+
 export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'deaths'>('active');
@@ -189,7 +190,7 @@ export default function Leaderboards() {
       if (rank === 1) return <Crown style={{ width: "24px", height: "24px", color: "#FFD700" }} />;
       if (rank === 2) return <Star style={{ width: "24px", height: "24px", color: "#C0C0C0" }} />;
       if (rank === 3) return <Trophy style={{ width: "24px", height: "24px", color: "#D2691E" }} />;
-      return <span style={{ color: "var(--primary)", fontSize: "18px", fontWeight: "600" }}>#{rank}</span>;
+      return <span style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>#{rank}</span>;
     };
 
     const getRankColor = (rank: number) => {

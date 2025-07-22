@@ -2,8 +2,8 @@ name: Sync PLAN Data
 
 on:
   schedule:
-    # Run every 30 minutes for near real-time updates
-    - cron: '*/30 * * * *'
+    # Run every 60 minutes for near real-time updates
+    - cron: '*/60 * * * *'
   workflow_dispatch: # Allow manual trigger
     inputs:
       force_sync:
