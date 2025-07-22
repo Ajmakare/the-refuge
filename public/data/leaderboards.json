@@ -1,0 +1,55 @@
+{
+  "mostActive": [
+    {
+      "uuid": "e5ca369e-a161-4c9c-b44a-9f1234447c4f",
+      "name": "BroZGold",
+      "playtime": 100827489,
+      "sessions": 25,
+      "kills": {
+        "mob": 196,
+        "player": 0
+      },
+      "deaths": 0,
+      "afkTime": 2231081,
+      "avgSessionLength": 67,
+      "activityScore": 79457485,
+      "lastSeen": "2025-07-21T22:55:05.104Z",
+      "joinDate": "2025-07-18T00:15:11.606Z"
+    }
+  ],
+  "topKillers": [
+    {
+      "uuid": "8da1aeb9-e345-40dc-9c30-ce89c928d76b",
+      "name": "CDBBoss",
+      "playtime": 57210996,
+      "sessions": 21,
+      "kills": {
+        "mob": 3798,
+        "player": 1
+      },
+      "deaths": 14,
+      "afkTime": 4015114,
+      "avgSessionLength": 45,
+      "activityScore": 46237117,
+      "lastSeen": "2025-07-21T22:46:59.294Z",
+      "joinDate": "2025-07-17T21:20:52.127Z"
+    }
+  ],
+  "mostDeaths": [
+    {
+      "uuid": "e1268111-5227-4862-9fca-9c8d7a029282",
+      "name": "Hefaest0s",
+      "playtime": 0,
+      "sessions": 0,
+      "kills": {
+        "mob": 0,
+        "player": 0
+      },
+      "deaths": 34,
+      "afkTime": 0,
+      "lastSeen": "2025-07-20T22:58:10.178Z",
+      "joinDate": "2025-07-17T21:29:15.973Z"
+    }
+  ],
+  "lastUpdated": "2025-07-22T00:00:00.000Z"
+}
