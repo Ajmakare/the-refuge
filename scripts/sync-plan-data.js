@@ -905,87 +905,49 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
   // Query 3: Longest Sessions - REMOVED per user request
   console.log('⚠️  Longest Sessions leaderboard removed - skipping query');
 
-  // Query 4: Most Deaths - Extract from sessions table if available
-  if (tables.players) {
-    if (tables.deaths) {
-      // Use dedicated deaths table if available
-      console.log('📊 Using dedicated deaths table for Most Deaths query...');
-      const deathsQuery = `
-        SELECT 
-          p.uuid, p.name, p.registered as join_date,
-          COALESCE(d.deaths, 0) as total_deaths
-        FROM ${tables.players} p
-        LEFT JOIN ${tables.deaths} d ON p.uuid = d.uuid
-        WHERE COALESCE(d.deaths, 0) > 0
-        ORDER BY total_deaths DESC
-        LIMIT ?
-      `;
+  // Query 4: Most Deaths - Extract from sessions table (PLAN stores deaths per session)
+  if (tables.players && tables.sessions && columns.userId) {
+    // Extract deaths from sessions table - this is where PLAN stores death data
+    console.log('📊 Aggregating death data from session records...');
+    const sessionDeathsQuery = `
+      SELECT 
+        p.uuid,
+        p.name,
+        p.registered as join_date,
+        SUM(COALESCE(s.deaths, 0)) as total_deaths,
+        MAX(s.${columns.sessionEnd}) as last_seen
+      FROM ${tables.players} p
+      LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+      GROUP BY p.uuid, p.name, p.registered
+      HAVING total_deaths > 0
+      ORDER BY total_deaths DESC
+      LIMIT ?
+    `;
 
-      db.all(deathsQuery, [CONFIG.limits.mostDeaths], (err, rows) => {
-        if (err) {
-          console.error('❌ Error querying most deaths from deaths table:', err.message);
-        } else {
-          console.log(`🔍 Most Deaths query returned ${rows.length} rows`);
-          leaderboardData.mostDeaths = rows.map(row => ({
-            uuid: row.uuid,
-            name: row.name,
-            playtime: 0,
-            sessions: 0,
-            kills: { mob: 0, player: 0 },
-            deaths: row.total_deaths || 0,
-            afkTime: 0,
-            lastSeen: new Date(row.join_date).toISOString(),
-            joinDate: new Date(row.join_date).toISOString()
-          }));
+    db.all(sessionDeathsQuery, [CONFIG.limits.mostDeaths], (err, rows) => {
+      if (err) {
+        console.error('❌ Error querying deaths from sessions:', err.message);
+      } else {
+        console.log(`🔍 Session Deaths query returned ${rows.length} rows`);
+        if (rows.length > 0) {
+          console.log(`🔍 Sample death data - Player: ${rows[0].name}, Deaths: ${rows[0].total_deaths}`);
         }
-        checkComplete();
-      });
-    } else if (tables.sessions && columns.userId) {
-      // Extract deaths from sessions table (Legacy PLAN v4)
-      console.log('📊 Aggregating death data from session records...');
-      const sessionDeathsQuery = `
-        SELECT 
-          p.uuid,
-          p.name,
-          p.registered as join_date,
-          SUM(COALESCE(s.deaths, 0)) as total_deaths,
-          MAX(s.${columns.sessionEnd}) as last_seen
-        FROM ${tables.players} p
-        LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
-        GROUP BY p.uuid, p.name, p.registered
-        HAVING total_deaths > 0
-        ORDER BY total_deaths DESC
-        LIMIT ?
-      `;
-
-      db.all(sessionDeathsQuery, [CONFIG.limits.mostDeaths], (err, rows) => {
-        if (err) {
-          console.error('❌ Error querying deaths from sessions:', err.message);
-        } else {
-          console.log(`🔍 Session Deaths query returned ${rows.length} rows`);
-          if (rows.length > 0) {
-            console.log(`🔍 Sample death data:`, rows[0]);
-          }
-          leaderboardData.mostDeaths = rows.map(row => ({
-            uuid: row.uuid,
-            name: row.name,
-            playtime: 0,
-            sessions: 0,
-            kills: { mob: 0, player: 0 },
-            deaths: row.total_deaths || 0,
-            afkTime: 0,
-            lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
-            joinDate: new Date(row.join_date).toISOString()
-          }));
-        }
-        checkComplete();
-      });
-    } else {
-      console.log('⚠️  Skipping Most Deaths query - no deaths data available');
+        leaderboardData.mostDeaths = rows.map(row => ({
+          uuid: row.uuid,
+          name: row.name,
+          playtime: 0,
+          sessions: 0,
+          kills: { mob: 0, player: 0 },
+          deaths: row.total_deaths || 0,
+          afkTime: 0,
+          lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
+          joinDate: new Date(row.join_date).toISOString()
+        }));
+      }
       checkComplete();
-    }
+    });
   } else {
-    console.log('⚠️  Skipping Most Deaths query - missing required tables');
+    console.log('⚠️  Skipping Most Deaths query - missing required tables (plan_users/plan_sessions)');
     checkComplete();
   }
 
