@@ -37,7 +37,7 @@ export default function HomePage() {
       `,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
+      backgroundRepeat: 'no-repeat',
       filter: 'blur(0px)',
       position: 'relative'
     }}>

@@ -40,6 +40,10 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   line-height: 1.6;
+  /* Prevent horizontal scrolling on mobile */
+  overflow-x: hidden;
+  /* Ensure proper mobile viewport handling */
+  width: 100%;
 }
 
 .minecraft-card {

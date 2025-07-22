@@ -77,7 +77,10 @@ export default function Leaderboards() {
       const mergePlayer = (uuid: string, newData: PlayerStats) => {
         const existing = playerMap.get(uuid);
         if (!existing) {
-          playerMap.set(uuid, { ...newData });
+          playerMap.set(uuid, { 
+            ...newData, 
+            kills: newData.kills || { mob: 0, player: 0 }
+          });
           return;
         }
         
@@ -89,8 +92,8 @@ export default function Leaderboards() {
           playtime: Math.max(existing.playtime || 0, newData.playtime || 0),
           sessions: Math.max(existing.sessions || 0, newData.sessions || 0),
           kills: {
-            mob: Math.max(existing.kills.mob || 0, newData.kills.mob || 0),
-            player: Math.max(existing.kills.player || 0, newData.kills.player || 0)
+            mob: Math.max(existing.kills?.mob || 0, newData.kills?.mob || 0),
+            player: Math.max(existing.kills?.player || 0, newData.kills?.player || 0)
           },
           deaths: Math.max(existing.deaths || 0, newData.deaths || 0),
           afkTime: Math.max(existing.afkTime || 0, newData.afkTime || 0),
@@ -144,7 +147,7 @@ export default function Leaderboards() {
         result = [];
     }
     
-    return result || [];
+    return (result || []).slice(0, 10);
   };
 
   const getTabConfig = (tab: string) => {
@@ -222,172 +225,332 @@ export default function Leaderboards() {
       <div className="minecraft-card" style={{ 
         marginBottom: '16px',
         background: rank <= 3 ? 'rgba(255, 255, 255, 0.12)' : 'var(--glass-bg)',
-        border: rank <= 3 ? `2px solid ${rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#D2691E'}` : '1px solid var(--glass-border)',
+        border: rank <= 3 ? '2px solid ' + (rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#D2691E') : '1px solid var(--glass-border)',
         opacity: 1,
         transform: 'translateY(0)'
       }}>
-        <div className="player-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1', minWidth: '280px' }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: getRankColor(rank),
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-            }}>
-              {getRankIcon(rank)}
-            </div>
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              position: 'relative',
-              boxShadow: '0 4px 16px rgba(99, 102, 241, 0.3)'
-            }}>
-              <img 
-                src={`https://mc-heads.net/avatar/${player.name}/56`}
-                alt={`${player.name}'s Minecraft head`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
-                }}
-                onError={(e) => {
-                  // Fallback to initial if avatar fails to load
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) {
-                    fallback.style.display = 'flex';
-                  }
-                }}
-              />
-              <div style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                display: 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px',
-                fontWeight: '700',
-                color: 'white',
-                position: 'absolute',
-                top: 0,
-                left: 0
+        <style jsx>{`
+          @media (min-width: 769px) {
+            .desktop-layout { display: block !important; }
+            .mobile-layout { display: none !important; }
+          }
+          @media (max-width: 768px) {
+            .desktop-layout { display: none !important; }
+            .mobile-layout { display: flex !important; }
+          }
+        `}</style>
+        <div className="player-card" style={{ 
+          display: 'flex', 
+          alignItems: 'stretch', 
+          justifyContent: 'space-between', 
+          flexDirection: 'column', 
+          gap: '12px'
+        }}>
+          {/* Desktop Layout - Player Info + Stat Inline */}
+          <div className="desktop-layout" style={{ display: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: getRankColor(rank),
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                  flexShrink: 0
+                }}>
+                  <div style={{ transform: 'scale(0.8)' }}>
+                    {getRankIcon(rank)}
+                  </div>
+                </div>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+                  flexShrink: 0
+                }}>
+                  <img 
+                    src={'https://mc-heads.net/avatar/' + player.name + '/56'}
+                    alt={player.name + "'s Minecraft head"}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      // Fallback to initial if avatar fails to load
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) {
+                        fallback.style.display = 'flex';
+                      }
+                    }}
+                  />
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                    display: 'none',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    fontWeight: '700',
+                    color: 'white',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0
+                  }}>
+                    {player.name.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ 
+                    fontSize: '18px', 
+                    fontWeight: '700', 
+                    color: 'white',
+                    marginBottom: '2px',
+                    fontFamily: 'Inter, sans-serif',
+                    lineHeight: '1.2',
+                    wordBreak: 'break-word'
+                  }}>
+                    {player.name}
+                  </h3>
+                  <p style={{ 
+                    fontSize: '13px', 
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontFamily: 'Inter, sans-serif',
+                    lineHeight: '1.2',
+                    wordBreak: 'break-word'
+                  }}>
+                    Joined {formatDate(player.joinDate)}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Primary Stat - Inline on Desktop */}
+              <div style={{ 
+                textAlign: 'center',
+                padding: '10px 16px',
+                borderRadius: '10px',
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                flexShrink: 0,
+                minWidth: '80px'
               }}>
-                {player.name.charAt(0).toUpperCase()}
+                <div style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '700',
+                  color: 'var(--primary)',
+                  fontFamily: 'Inter, sans-serif',
+                  lineHeight: '1.2'
+                }}>
+                  {displayStat.value}
+                </div>
+                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
+                  {displayStat.label}
+                </div>
               </div>
             </div>
-            <div>
-              <h3 style={{ 
-                fontSize: '20px', 
-                fontWeight: '700', 
-                color: 'white',
-                marginBottom: '4px',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                {player.name}
-              </h3>
-              <p style={{ 
-                fontSize: '14px', 
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                Joined {formatDate(player.joinDate)}
-              </p>
-            </div>
           </div>
-          
-          {/* Primary Stat */}
-          <div style={{ 
-            textAlign: 'center',
-            padding: '16px 24px',
-            borderRadius: '12px',
-            background: 'rgba(99, 102, 241, 0.1)',
-            border: '1px solid rgba(99, 102, 241, 0.3)'
-          }}>
-            <div style={{ 
-              fontSize: '24px', 
-              fontWeight: '700',
-              color: 'var(--primary)',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              {displayStat.value}
-            </div>
-            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
-              {displayStat.label}
-            </div>
-          </div>
-          
-          {/* Additional Stats */}
-          <div className="player-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '16px', flex: '1', minWidth: '320px' }}>
-            <div style={{ textAlign: 'center' }}>
+
+          {/* Mobile Layout - Player Info + Stat Separate */}
+          <div className="mobile-layout" style={{ display: 'none', flexDirection: 'column', paddingLeft: '15px' }}>
+            {/* Player Info Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', marginBottom: '12px' }}>
               <div style={{ 
-                fontSize: '16px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: getRankColor(rank),
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                flexShrink: 0
+              }}>
+                <div style={{ transform: 'scale(0.8)' }}>
+                  {getRankIcon(rank)}
+                </div>
+              </div>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                position: 'relative',
+                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+                flexShrink: 0
+              }}>
+                <img 
+                  src={'https://mc-heads.net/avatar/' + player.name + '/56'}
+                  alt={player.name + "'s Minecraft head"}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    // Fallback to initial if avatar fails to load
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) {
+                      fallback.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                  display: 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  color: 'white',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0
+                }}>
+                  {player.name.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '700', 
+                  color: 'white',
+                  marginBottom: '2px',
+                  fontFamily: 'Inter, sans-serif',
+                  lineHeight: '1.2',
+                  wordBreak: 'break-word'
+                }}>
+                  {player.name}
+                </h3>
+                <p style={{ 
+                  fontSize: '13px', 
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontFamily: 'Inter, sans-serif',
+                  lineHeight: '1.2',
+                  wordBreak: 'break-word'
+                }}>
+                  Joined {formatDate(player.joinDate)}
+                </p>
+              </div>
+            </div>
+            
+            {/* Primary Stat - Perfectly Centered on Mobile */}
+            <div style={{ 
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+              margin: '0',
+              padding: '0',
+              boxSizing: 'border-box'
+            }}>
+              <div style={{ 
+                textAlign: 'center',
+                padding: '12px 20px',
+                borderRadius: '10px',
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                width: '160px',
+                margin: '0 auto',
+                boxSizing: 'border-box'
+              }}>
+              <div style={{ 
+                fontSize: '20px', 
+                fontWeight: '700',
+                color: 'var(--primary)',
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2'
+              }}>
+                {displayStat.value}
+              </div>
+                <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
+                  {displayStat.label}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Additional Stats Grid */}
+          <div className="player-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '8px' }}>
+            <div style={{ textAlign: 'center', padding: '8px 4px' }}>
+              <div style={{ 
+                fontSize: '14px', 
                 fontWeight: '600',
                 color: player.kills.mob > 0 ? 'var(--success)' : 'rgba(255, 255, 255, 0.4)',
-                fontFamily: 'Inter, sans-serif'
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2'
               }}>
                 {formatNumber(player.kills.mob)}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
-                Mob Kills
+              <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
+                Mob
               </div>
             </div>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', padding: '8px 4px' }}>
               <div style={{ 
-                fontSize: '16px', 
+                fontSize: '14px', 
                 fontWeight: '600',
                 color: player.kills.player > 0 ? 'var(--error)' : 'rgba(255, 255, 255, 0.4)',
-                fontFamily: 'Inter, sans-serif'
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2'
               }}>
                 {formatNumber(player.kills.player)}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
-                PvP Kills
+              <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
+                PvP
               </div>
             </div>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', padding: '8px 4px' }}>
               <div style={{ 
-                fontSize: '16px', 
+                fontSize: '14px', 
                 fontWeight: '600',
                 color: (player.avgSessionLength || 0) > 0 ? 'var(--accent)' : 'rgba(255, 255, 255, 0.4)',
-                fontFamily: 'Inter, sans-serif'
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2'
               }}>
-                {(player.avgSessionLength || 0) > 0 ? `${player.avgSessionLength}m` : '0'}
+                {(player.avgSessionLength || 0) > 0 ? player.avgSessionLength + 'm' : '0'}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
-                Avg Session
+              <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
+                Session
               </div>
             </div>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', padding: '8px 4px' }}>
               <div style={{ 
-                fontSize: '16px', 
+                fontSize: '14px', 
                 fontWeight: '600',
                 color: player.sessions > 0 ? 'var(--warning)' : 'rgba(255, 255, 255, 0.4)',
-                fontFamily: 'Inter, sans-serif'
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2'
               }}>
                 {player.sessions}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif' }}>
+              <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
                 Sessions
               </div>
             </div>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', padding: '8px 4px' }}>
               <div style={{ 
-                fontSize: '14px', 
+                fontSize: '12px', 
                 fontWeight: '500',
                 color: 'rgba(255, 255, 255, 0.6)',
-                fontFamily: 'Inter, sans-serif'
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2'
               }}>
                 {formatDate(player.lastSeen)}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'Inter, sans-serif' }}>
+              <div style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
                 Last Seen
               </div>
             </div>
@@ -634,8 +797,8 @@ export default function Leaderboards() {
                         {activeTab === 'active' ? 
                           `${data?.mostActive?.length || 0} players have joined the server.` :
                          activeTab === 'killers' ? 
-                          'Players haven\'t started battling mobs or each other yet.' :
-                          'Players haven\'t died yet... they\'re playing it safe!'}
+                          "Players haven't started battling mobs or each other yet." :
+                          "Players haven't died yet... they're playing it safe!"}
                       </p>
                       <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>
                         Data syncs automatically every 30 minutes as players are active.
@@ -772,6 +935,23 @@ export default function Leaderboards() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive layout for player cards */
+        .mobile-layout {
+          display: block;
+        }
+        .desktop-layout {
+          display: none;
+        }
+        
+        @media (min-width: 768px) {
+          .mobile-layout {
+            display: none;
+          }
+          .desktop-layout {
+            display: block;
+          }
         }
       `}</style>
     </div>

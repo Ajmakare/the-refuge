@@ -813,9 +813,13 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         SELECT 
           p.uuid, p.name, p.registered as join_date,
           ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) as mob_kills` : '0 as mob_kills'},
-          ${playerKillsCol !== '0' ? `COALESCE(k.${playerKillsCol}, 0) as player_kills` : '0 as player_kills'}
+          ${playerKillsCol !== '0' ? `COALESCE(k.${playerKillsCol}, 0) as player_kills` : '0 as player_kills'},
+          ${tables.sessions && columns.playtime ? `COALESCE(s.${columns.playtime}, 0) as playtime,` : '0 as playtime,'}
+          ${columns.sessions ? `COALESCE(s.${columns.sessions}, 0) as sessions,` : '0 as sessions,'}
+          ${columns.lastSeen ? `COALESCE(s.${columns.lastSeen}, p.registered) as last_seen` : 'p.registered as last_seen'}
         FROM ${tables.players} p
         LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid
+        ${tables.sessions && columns.playtime ? `LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid` : ''}
         WHERE ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) > 0` : '1=0'}
         ORDER BY ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) DESC` : 'p.uuid'}
         LIMIT ?
@@ -829,12 +833,12 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           leaderboardData.topKillers = rows.map(row => ({
             uuid: row.uuid,
             name: row.name,
-            playtime: undefined, // Let merge function handle this
-            sessions: undefined, // Let merge function handle this
+            playtime: row.playtime || 0,
+            sessions: row.sessions || 0,
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
-            deaths: undefined, // Let merge function handle this
-            afkTime: undefined, // Let merge function handle this
-            avgSessionLength: undefined, // Let merge function handle this
+            deaths: undefined, // Not available in kills query
+            afkTime: undefined, // Not available in kills query
+            avgSessionLength: undefined, // Not available in kills query
             lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
@@ -850,7 +854,10 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         WITH mob_kills_summary AS (
           SELECT 
             p.uuid, p.name, p.registered as join_date,
-            COALESCE(SUM(s.mob_kills), 0) as mob_kills
+            COALESCE(SUM(s.mob_kills), 0) as mob_kills,
+            COALESCE(SUM(s.${columns.sessionLength}), 0) as playtime,
+            COUNT(DISTINCT s.id) as sessions,
+            MAX(s.${columns.sessionEnd}) as last_seen
           FROM ${tables.players} p
           LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
           GROUP BY p.uuid, p.name, p.registered
@@ -867,7 +874,10 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           m.uuid, m.name, m.join_date,
           m.mob_kills,
           COALESCE(pk.player_kills, 0) as player_kills,
-          (m.mob_kills + COALESCE(pk.player_kills, 0)) as total_kills
+          (m.mob_kills + COALESCE(pk.player_kills, 0)) as total_kills,
+          m.playtime,
+          m.sessions,
+          COALESCE(m.last_seen, m.join_date) as last_seen
         FROM mob_kills_summary m
         LEFT JOIN pvp_kills_summary pk ON m.uuid = pk.uuid
         WHERE (m.mob_kills + COALESCE(pk.player_kills, 0)) > 0
@@ -883,13 +893,13 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           leaderboardData.topKillers = rows.map(row => ({
             uuid: row.uuid,
             name: row.name,
-            playtime: undefined, // Let merge function handle this
-            sessions: undefined, // Let merge function handle this
+            playtime: row.playtime || 0,
+            sessions: row.sessions || 0,
             kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 },
-            deaths: undefined, // Let merge function handle this
-            afkTime: undefined, // Let merge function handle this
-            avgSessionLength: undefined, // Let merge function handle this
-            lastSeen: new Date(row.join_date).toISOString(),
+            deaths: undefined, // Not available in combined kills query
+            afkTime: undefined, // Not available in combined kills query
+            avgSessionLength: undefined, // Not available in combined kills query
+            lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
             joinDate: new Date(row.join_date).toISOString()
           }));
         }
@@ -917,6 +927,8 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         p.name,
         p.registered as join_date,
         SUM(COALESCE(s.deaths, 0)) as total_deaths,
+        SUM(COALESCE(s.${columns.sessionLength}, 0)) as playtime,
+        COUNT(DISTINCT s.id) as sessions,
         MAX(s.${columns.sessionEnd}) as last_seen
       FROM ${tables.players} p
       LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
@@ -937,12 +949,12 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         leaderboardData.mostDeaths = rows.map(row => ({
           uuid: row.uuid,
           name: row.name,
-          playtime: undefined, // Let merge function handle this
-          sessions: undefined, // Let merge function handle this
-          kills: { mob: undefined, player: undefined }, // Let merge function handle this
+          playtime: row.playtime || 0,
+          sessions: row.sessions || 0,
+          kills: { mob: undefined, player: undefined }, // Not available in deaths query
           deaths: row.total_deaths || 0,
-          afkTime: undefined, // Let merge function handle this
-          avgSessionLength: undefined, // Let merge function handle this
+          afkTime: undefined, // Not available in deaths query
+          avgSessionLength: undefined, // Not available in deaths query
           lastSeen: new Date(row.last_seen || row.join_date).toISOString(),
           joinDate: new Date(row.join_date).toISOString()
         }));
