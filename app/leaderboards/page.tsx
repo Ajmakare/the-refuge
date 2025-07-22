@@ -625,32 +625,6 @@ export default function Leaderboards() {
         zIndex: -1
       }} />
 
-      {/* Fixed Sidebar Ad */}
-      <div className="fixed-sidebar-ad" style={{
-        position: 'fixed',
-        top: '50%',
-        right: '20px',
-        transform: 'translateY(-50%)',
-        zIndex: 50
-      }}>
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '2px dashed rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          padding: '20px',
-          textAlign: 'center',
-          color: 'rgba(255, 255, 255, 0.4)',
-          fontSize: '12px',
-          width: '300px',
-          height: '600px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backdropFilter: 'blur(10px)'
-        }}>
-          [Premium AdSense Sidebar - 300x600]
-        </div>
-      </div>
 
       {/* Main Content Container */}
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -909,24 +883,6 @@ export default function Leaderboards() {
               </div>
             </div>
             
-            {/* Footer Ad */}
-            <div className="footer-ad" style={{ flex: '0 0 320px' }}>
-              <div style={{ 
-                padding: "20px", 
-                color: "rgba(255, 255, 255, 0.4)", 
-                border: "2px dashed rgba(255, 255, 255, 0.1)",
-                borderRadius: '12px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                textAlign: 'center',
-                fontSize: '12px',
-                height: '100px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                [Premium AdSense Footer - 320x100]
-              </div>
-            </div>
           </div>
         </footer>
       </div>
