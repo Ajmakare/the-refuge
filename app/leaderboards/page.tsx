@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star } from "lucide-react";
+import { Trophy, Clock, Sword, Home, BarChart3, Crown, Star, Info } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LeaderboardData, PlayerStats } from "@/lib/types";
@@ -11,6 +11,7 @@ export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'deaths'>('active');
   const [loading, setLoading] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
 
 
   useEffect(() => {
@@ -63,6 +64,21 @@ export default function Leaderboards() {
       observer.disconnect();
     };
   }, [data]);
+
+  // Close info tooltip when clicking outside
+  useEffect(() => {
+    if (!showInfo) return;
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.info-tooltip-container')) {
+        setShowInfo(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showInfo]);
 
   const getActiveData = (): PlayerStats[] => {
     if (!data) {
@@ -729,21 +745,80 @@ export default function Leaderboards() {
                   fontSize: '16px', 
                   color: 'rgba(255, 255, 255, 0.7)',
                   fontFamily: 'Inter, sans-serif',
-                  marginBottom: '12px'
+                  marginBottom: activeTab === 'active' ? '8px' : '12px'
                 }}>
                   {currentTab.description}
                 </p>
                 {activeTab === 'active' && (
                   <div style={{ 
-                    fontSize: '13px', 
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontFamily: 'Inter, sans-serif',
-                    marginBottom: '8px',
-                    maxWidth: '600px',
-                    margin: '0 auto 8px auto',
-                    lineHeight: '1.4'
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    marginBottom: '12px' 
                   }}>
-                    <strong>How rankings work:</strong> Players are ranked by an activity score that considers recent playtime, session frequency, consistency, and engagement - not just total hours played.
+                    <div className="info-tooltip-container" style={{ position: 'relative' }}>
+                      <button
+                        onClick={() => setShowInfo(!showInfo)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          fontSize: '12px',
+                          fontFamily: 'Inter, sans-serif',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                          e.currentTarget.style.background = 'none';
+                        }}
+                      >
+                        <Info style={{ width: '12px', height: '12px' }} />
+                        How are rankings calculated?
+                      </button>
+                      {showInfo && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '30px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: 'rgba(0, 0, 0, 0.95)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '8px',
+                          padding: '16px 20px',
+                          width: '450px',
+                          maxWidth: '90vw',
+                          fontSize: '14px',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontFamily: 'Inter, sans-serif',
+                          lineHeight: '1.5',
+                          zIndex: 1000,
+                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)'
+                        }}>
+                          <strong>How rankings work:</strong> Players are ranked by an activity score that considers recent playtime, session frequency, consistency, and engagement - not just total hours played.
+                          <div style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            left: '50%',
+                            transform: 'translateX(-50%) rotate(45deg)',
+                            width: '12px',
+                            height: '12px',
+                            background: 'rgba(0, 0, 0, 0.95)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderBottom: 'none',
+                            borderRight: 'none'
+                          }} />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
                 {data && (
