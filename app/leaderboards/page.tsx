@@ -1,21 +1,23 @@
 "use client";
 
-import { Trophy, Clock, Sword, Home, Crown, Star, Info } from "lucide-react";
+import { Trophy, Clock, Sword, Home, Crown, Star, Info, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { LeaderboardData, PlayerStats } from "@/lib/types";
+import { LeaderboardData, PlayerStats, DiscordPlayer, DiscordLeaderboardData } from "@/lib/types";
 import { formatPlaytime, formatNumber, formatDate, formatDateTime, formatRank, getRankColor as getPlayerRankColor } from "@/lib/utils";
 
 
 export default function Leaderboards() {
   const [data, setData] = useState<LeaderboardData | null>(null);
-  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'deaths'>('active');
+  const [discordData, setDiscordData] = useState<DiscordLeaderboardData | null>(null);
+  const [activeTab, setActiveTab] = useState<'active' | 'killers' | 'deaths' | 'discord'>('active');
   const [loading, setLoading] = useState(true);
+  const [discordLoading, setDiscordLoading] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
 
 
   useEffect(() => {
-    // Fetch real leaderboards data
+    // Fetch Minecraft leaderboards data
     fetch('/api/leaderboards')
       .then(res => res.json())
       .then((data: LeaderboardData) => {
@@ -24,6 +26,17 @@ export default function Leaderboards() {
       })
       .catch(err => {
         setLoading(false);
+      });
+
+    // Fetch Discord leaderboards data
+    fetch('/api/discord-leaderboard')
+      .then(res => res.json())
+      .then((data: DiscordLeaderboardData) => {
+        setDiscordData(data);
+        setDiscordLoading(false);
+      })
+      .catch(err => {
+        setDiscordLoading(false);
       });
   }, []);
 
@@ -155,7 +168,11 @@ export default function Leaderboards() {
     return { mostActive, topKiller, mostDeaths };
   };
 
-  const getActiveData = (): PlayerStats[] => {
+  const getActiveData = (): (PlayerStats | DiscordPlayer)[] => {
+    if (activeTab === 'discord') {
+      return discordData?.players?.slice(0, 20) || [];
+    }
+
     const completePlayerData = mergeAllPlayerData();
     const allPlayers = Array.from(completePlayerData.values());
     
@@ -209,6 +226,12 @@ export default function Leaderboards() {
           title: 'Most Deaths',
           description: 'Players who have died the most (learning experiences!)'
         };
+      case 'discord':
+        return {
+          icon: <MessageSquare style={{ width: "20px", height: "20px" }} />,
+          title: 'Discord Leaderboard',
+          description: 'Most active Discord community members by level and XP'
+        };
       default: 
         return { 
           icon: <Clock style={{ width: "20px", height: "20px" }} />, 
@@ -216,6 +239,163 @@ export default function Leaderboards() {
           description: 'Players with the highest total playtime'
         };
     }
+  };
+
+  // Helper function to check if player is Discord player
+  const isDiscordPlayer = (player: PlayerStats | DiscordPlayer): player is DiscordPlayer => {
+    return 'level' in player && 'xp' in player && 'message_count' in player;
+  };
+
+  // Discord Player Card Component
+  const DiscordPlayerCard = ({ player, rank }: { player: DiscordPlayer; rank: number }) => {
+    const getRankIcon = (rank: number) => {
+      if (rank === 1) return <Crown style={{ width: "24px", height: "24px", color: "#FFD700" }} />;
+      if (rank === 2) return <Star style={{ width: "24px", height: "24px", color: "#C0C0C0" }} />;
+      if (rank === 3) return <Trophy style={{ width: "24px", height: "24px", color: "#D2691E" }} />;
+      return <span style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>#{rank}</span>;
+    };
+
+    const getRankColor = (rank: number) => {
+      if (rank === 1) return "linear-gradient(135deg, #FFD700, #FFA500)";
+      if (rank === 2) return "linear-gradient(135deg, #C0C0C0, #A0A0A0)";
+      if (rank === 3) return "linear-gradient(135deg, #D2691E, #A0522D)";
+      return "var(--primary)";
+    };
+
+    return (
+      <div className="minecraft-card" style={{ 
+        marginBottom: '16px',
+        background: rank <= 3 ? 'rgba(139, 92, 246, 0.12)' : 'var(--glass-bg)',
+        border: rank <= 3 ? '2px solid ' + (rank === 1 ? '#8b5cf6' : rank === 2 ? '#a78bfa' : '#c4b5fd') : '1px solid var(--glass-border)',
+        opacity: 1,
+        transform: 'translateY(0)',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          gap: '16px',
+          width: '100%',
+          minWidth: 0
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              background: getRankColor(rank),
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              flexShrink: 0
+            }}>
+              <div style={{ transform: 'scale(0.9)' }}>
+                {getRankIcon(rank)}
+              </div>
+            </div>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '14px',
+              overflow: 'hidden',
+              position: 'relative',
+              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)',
+              flexShrink: 0
+            }}>
+              <img 
+                src={`https://cdn.discordapp.com/avatars/${player.id}/${player.avatar}.png?size=128`}
+                alt={player.username + "'s Discord avatar"}
+                loading="lazy"
+                decoding="async"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  // Fallback to Discord default avatar
+                  e.currentTarget.src = `https://cdn.discordapp.com/embed/avatars/${parseInt(player.discriminator) % 5}.png`;
+                }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: '700', 
+                color: 'white',
+                marginBottom: '4px',
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2',
+                wordBreak: 'break-word'
+              }}>
+                {player.username}
+              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(139, 92, 246, 0.5)',
+                  boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>LVL</span>
+                  <span style={{ 
+                    fontSize: '16px', 
+                    fontWeight: '700', 
+                    color: 'white',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    {player.level}
+                  </span>
+                </div>
+                <p style={{ 
+                  fontSize: '14px', 
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontFamily: 'Inter, sans-serif',
+                  lineHeight: '1.2',
+                  margin: 0
+                }}>
+                  {formatNumber(player.message_count)} messages
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* XP Display */}
+          <div style={{ 
+            textAlign: 'center',
+            padding: '16px 24px',
+            borderRadius: '12px',
+            background: 'rgba(139, 92, 246, 0.15)',
+            border: '1px solid rgba(139, 92, 246, 0.4)',
+            flexShrink: 0,
+            minWidth: '140px',
+            maxWidth: '140px'
+          }}>
+            <div style={{ 
+              fontSize: '20px', 
+              fontWeight: '700',
+              color: '#8b5cf6',
+              fontFamily: 'Inter, sans-serif',
+              lineHeight: '1.2',
+              marginBottom: '4px'
+            }}>
+              {formatNumber(player.xp)}
+            </div>
+            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'Inter, sans-serif' }}>
+              Total XP
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const PlayerCard = ({ player, rank }: { player: PlayerStats; rank: number }) => {
@@ -266,7 +446,10 @@ export default function Leaderboards() {
         background: rank <= 3 ? 'rgba(255, 255, 255, 0.12)' : 'var(--glass-bg)',
         border: rank <= 3 ? '2px solid ' + (rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#D2691E') : '1px solid var(--glass-border)',
         opacity: 1,
-        transform: 'translateY(0)'
+        transform: 'translateY(0)',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box'
       }}>
         <style jsx>{`
           @media (min-width: 769px) {
@@ -314,8 +497,10 @@ export default function Leaderboards() {
                   flexShrink: 0
                 }}>
                   <img 
-                    src={'https://mc-heads.net/avatar/' + (player.uuid || player.name) + '/56'}
+                    src={'https://mc-heads.net/avatar/' + (player.uuid || player.name) + '/64'}
                     alt={player.name + "'s Minecraft head"}
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       width: '100%',
                       height: '100%',
@@ -380,7 +565,8 @@ export default function Leaderboards() {
                 background: 'rgba(99, 102, 241, 0.1)',
                 border: '1px solid rgba(99, 102, 241, 0.3)',
                 flexShrink: 0,
-                minWidth: '80px'
+                minWidth: '140px',
+                maxWidth: '140px'
               }}>
                 <div style={{ 
                   fontSize: '18px', 
@@ -598,7 +784,7 @@ export default function Leaderboards() {
     );
   };
 
-  if (loading) {
+  if (loading || (activeTab === 'discord' && discordLoading)) {
     return (
       <div style={{ 
         minHeight: "100dvh", // Dynamic viewport height for mobile (fallback: 100vh)
@@ -757,6 +943,7 @@ export default function Leaderboards() {
                 { key: 'active' as const, label: 'Most Active' },
                 { key: 'killers' as const, label: 'Top Combat' },
                 { key: 'deaths' as const, label: 'Most Deaths' },
+                { key: 'discord' as const, label: 'Discord' },
               ].map(tab => {
                 const config = getTabConfig(tab.key);
                 return (
@@ -785,7 +972,12 @@ export default function Leaderboards() {
           {/* Main Content */}
           <div className="leaderboard-content" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '48px', alignItems: 'start', marginBottom: '80px' }}>
             {/* Leaderboard Content */}
-            <div className="minecraft-card slide-up" style={{ padding: '32px' }}>
+            <div className="minecraft-card slide-up" style={{ 
+              padding: '32px',
+              minWidth: '600px',
+              maxWidth: '800px',
+              width: '100%'
+            }}>
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <div style={{ 
                   display: 'flex', 
@@ -884,25 +1076,35 @@ export default function Leaderboards() {
                     </div>
                   </div>
                 )}
-                {data && (
+                {((activeTab === 'discord' && discordData) || (activeTab !== 'discord' && data)) && (
                   <p style={{ 
                     fontSize: '14px', 
                     color: 'rgba(255, 255, 255, 0.5)',
                     fontFamily: 'Inter, sans-serif'
                   }}>
-                    Updated {formatDateTime(data.lastUpdated)}
+                    Updated {formatDateTime(activeTab === 'discord' ? discordData?.lastUpdated || '' : data?.lastUpdated || '')}
                   </p>
                 )}
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '16px',
+                width: '100%',
+                minHeight: '600px' // Ensures consistent height even with fewer players
+              }}>
                 {(() => {
                   const activeData = getActiveData();
                   
                   return activeData.length > 0 ? (
-                    activeData.map((player, index) => (
-                      <PlayerCard key={player.uuid} player={player} rank={index + 1} />
-                    ))
+                    activeData.map((player, index) => {
+                      if (isDiscordPlayer(player)) {
+                        return <DiscordPlayerCard key={player.id} player={player} rank={index + 1} />;
+                      } else {
+                        return <PlayerCard key={player.uuid} player={player} rank={index + 1} />;
+                      }
+                    })
                   ) : (
                     <div style={{ 
                       textAlign: 'center', 
@@ -912,17 +1114,21 @@ export default function Leaderboards() {
                     }}>
                       <div style={{ fontSize: '48px', marginBottom: '16px' }}>
                         {activeTab === 'active' ? '⏱️' : 
-                         activeTab === 'killers' ? '⚔️' : '💀'}
+                         activeTab === 'killers' ? '⚔️' : 
+                         activeTab === 'discord' ? '💬' : '💀'}
                       </div>
                       <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: 'white' }}>
                         {activeTab === 'active' ? 'Players are joining!' : 
-                         activeTab === 'killers' ? 'No combat data yet' : 'No death data yet'}
+                         activeTab === 'killers' ? 'No combat data yet' : 
+                         activeTab === 'discord' ? 'Discord loading...' : 'No death data yet'}
                       </h3>
                       <p style={{ fontSize: '16px', marginBottom: '8px' }}>
                         {activeTab === 'active' ? 
                           `${data?.mostActive?.length || 0} players have joined the server.` :
                          activeTab === 'killers' ? 
                           "Players haven't started battling mobs or each other yet." :
+                         activeTab === 'discord' ?
+                          "Loading Discord community leaderboard..." :
                           "Players haven't died yet... they're playing it safe!"}
                       </p>
                       <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.4)' }}>
@@ -967,8 +1173,10 @@ export default function Leaderboards() {
                                 flexShrink: 0
                               }}>
                                 <img 
-                                  src={'https://mc-heads.net/avatar/' + (topPlayers.mostActive.uuid || topPlayers.mostActive.name) + '/32'}
+                                  src={'https://mc-heads.net/avatar/' + (topPlayers.mostActive.uuid || topPlayers.mostActive.name) + '/64'}
                                   alt={topPlayers.mostActive.name + "'s head"}
+                                  loading="lazy"
+                                  decoding="async"
                                   style={{
                                     width: '100%',
                                     height: '100%',
@@ -1027,8 +1235,10 @@ export default function Leaderboards() {
                                 flexShrink: 0
                               }}>
                                 <img 
-                                  src={'https://mc-heads.net/avatar/' + (topPlayers.topKiller.uuid || topPlayers.topKiller.name) + '/32'}
+                                  src={'https://mc-heads.net/avatar/' + (topPlayers.topKiller.uuid || topPlayers.topKiller.name) + '/64'}
                                   alt={topPlayers.topKiller.name + "'s head"}
+                                  loading="lazy"
+                                  decoding="async"
                                   style={{
                                     width: '100%',
                                     height: '100%',
@@ -1087,8 +1297,10 @@ export default function Leaderboards() {
                                 flexShrink: 0
                               }}>
                                 <img 
-                                  src={'https://mc-heads.net/avatar/' + (topPlayers.mostDeaths.uuid || topPlayers.mostDeaths.name) + '/32'}
+                                  src={'https://mc-heads.net/avatar/' + (topPlayers.mostDeaths.uuid || topPlayers.mostDeaths.name) + '/64'}
                                   alt={topPlayers.mostDeaths.name + "'s head"}
+                                  loading="lazy"
+                                  decoding="async"
                                   style={{
                                     width: '100%',
                                     height: '100%',
