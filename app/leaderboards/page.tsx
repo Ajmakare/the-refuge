@@ -612,13 +612,15 @@ export default function Leaderboards() {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        {/* Fixed background layer */}
+        {/* Fixed background layer - extends beyond safe areas */}
         <div style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: 'calc(0px - env(safe-area-inset-top))',
+          left: 'calc(0px - env(safe-area-inset-left))',
+          right: 'calc(0px - env(safe-area-inset-right))',
+          bottom: 'calc(0px - env(safe-area-inset-bottom))',
+          width: 'calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right))',
+          height: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))',
           backgroundImage: `url('/images/minecraft_bg.avif')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -627,14 +629,16 @@ export default function Leaderboards() {
           zIndex: -2
         }} />
         
-        {/* Background overlay */}
+        {/* Background overlay - extends beyond safe areas */}
         <div style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `linear-gradient(rgba(0, 0, 0, 00), rgba(0, 0, 0, 0.5))`,
+          top: 'calc(0px - env(safe-area-inset-top))',
+          left: 'calc(0px - env(safe-area-inset-left))',
+          right: 'calc(0px - env(safe-area-inset-right))',
+          bottom: 'calc(0px - env(safe-area-inset-bottom))',
+          width: 'calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right))',
+          height: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))',
+          background: `linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5))`,
           zIndex: -1
         }} />
         
@@ -671,13 +675,15 @@ export default function Leaderboards() {
       paddingLeft: 'env(safe-area-inset-left)',
       paddingRight: 'env(safe-area-inset-right)'
     }}>
-      {/* Fixed background layer */}
+      {/* Fixed background layer - extends beyond safe areas */}
       <div style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        top: 'calc(0px - env(safe-area-inset-top))',
+        left: 'calc(0px - env(safe-area-inset-left))',
+        right: 'calc(0px - env(safe-area-inset-right))',
+        bottom: 'calc(0px - env(safe-area-inset-bottom))',
+        width: 'calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right))',
+        height: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))',
         backgroundImage: `url('/images/minecraft_bg.avif')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -686,13 +692,15 @@ export default function Leaderboards() {
         zIndex: -2
       }} />
       
-      {/* Background overlay */}
+      {/* Background overlay - extends beyond safe areas */}
       <div style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        top: 'calc(0px - env(safe-area-inset-top))',
+        left: 'calc(0px - env(safe-area-inset-left))',
+        right: 'calc(0px - env(safe-area-inset-right))',
+        bottom: 'calc(0px - env(safe-area-inset-bottom))',
+        width: 'calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right))',
+        height: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))',
         background: `linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5))`,
         zIndex: -1
       }} />
