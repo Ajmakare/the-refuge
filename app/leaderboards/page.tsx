@@ -1124,7 +1124,7 @@ export default function Leaderboards() {
             {/* Leaderboard Content */}
             <div className="minecraft-card slide-up" style={{ 
               padding: '32px',
-              minWidth: '0px',
+              minWidth: '600px',
               maxWidth: '800px',
               width: '100%'
             }}>
@@ -1606,6 +1606,10 @@ export default function Leaderboards() {
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
+          }
+          
+          .slide-up {
+            min-width: 0 !important;
           }
           
           /* Ensure proper spacing for mobile navigation */
