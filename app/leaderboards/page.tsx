@@ -314,7 +314,7 @@ export default function Leaderboards() {
                   flexShrink: 0
                 }}>
                   <img 
-                    src={'https://mc-heads.net/avatar/' + player.name + '/56'}
+                    src={'https://mc-heads.net/avatar/' + (player.uuid || player.name) + '/56'}
                     alt={player.name + "'s Minecraft head"}
                     style={{
                       width: '100%',
@@ -398,36 +398,36 @@ export default function Leaderboards() {
             </div>
           </div>
 
-          {/* Mobile Layout - Player Info + Stat Separate */}
-          <div className="mobile-layout" style={{ display: 'none', flexDirection: 'column', paddingLeft: '15px' }}>
-            {/* Player Info Row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', marginBottom: '12px' }}>
+          {/* Mobile Layout - Improved for better readability */}
+          <div className="mobile-layout" style={{ display: 'none', flexDirection: 'column', padding: '0', paddingLeft: '15px' }}>
+            {/* Top Row: Rank + Avatar + Name/Join Date */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%', marginBottom: '16px' }}>
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
                 background: getRankColor(rank),
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                 flexShrink: 0
               }}>
-                <div style={{ transform: 'scale(0.8)' }}>
+                <div style={{ transform: 'scale(0.9)' }}>
                   {getRankIcon(rank)}
                 </div>
               </div>
               <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '10px',
+                width: '56px',
+                height: '56px',
+                borderRadius: '14px',
                 overflow: 'hidden',
                 position: 'relative',
-                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
                 flexShrink: 0
               }}>
                 <img 
-                  src={'https://mc-heads.net/avatar/' + player.name + '/56'}
+                  src={'https://mc-heads.net/avatar/' + (player.uuid || player.name) + '/64'}
                   alt={player.name + "'s Minecraft head"}
                   style={{
                     width: '100%',
@@ -446,12 +446,12 @@ export default function Leaderboards() {
                 <div style={{
                   width: '100%',
                   height: '100%',
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
                   display: 'none',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px',
+                  fontSize: '28px',
                   fontWeight: '700',
                   color: 'white',
                   position: 'absolute',
@@ -463,10 +463,10 @@ export default function Leaderboards() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ 
-                  fontSize: '18px', 
+                  fontSize: '20px', 
                   fontWeight: '700', 
                   color: 'white',
-                  marginBottom: '2px',
+                  marginBottom: '4px',
                   fontFamily: 'Inter, sans-serif',
                   lineHeight: '1.2',
                   wordBreak: 'break-word'
@@ -474,8 +474,8 @@ export default function Leaderboards() {
                   {player.name}
                 </h3>
                 <p style={{ 
-                  fontSize: '13px', 
-                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '14px', 
+                  color: 'rgba(255, 255, 255, 0.7)',
                   fontFamily: 'Inter, sans-serif',
                   lineHeight: '1.2',
                   wordBreak: 'break-word'
@@ -485,36 +485,30 @@ export default function Leaderboards() {
               </div>
             </div>
             
-            {/* Primary Stat - Perfectly Centered on Mobile */}
+            {/* Primary Stat - Full Width */}
             <div style={{ 
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
               width: '100%',
-              margin: '0',
-              padding: '0',
-              boxSizing: 'border-box'
+              marginBottom: '16px'
             }}>
               <div style={{ 
                 textAlign: 'center',
-                padding: '12px 20px',
-                borderRadius: '10px',
-                background: 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
-                width: '160px',
-                margin: '0 auto',
-                boxSizing: 'border-box'
+                padding: '16px 24px',
+                borderRadius: '12px',
+                background: 'rgba(99, 102, 241, 0.15)',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
+                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.2)'
               }}>
-              <div style={{ 
-                fontSize: '20px', 
-                fontWeight: '700',
-                color: 'var(--primary)',
-                fontFamily: 'Inter, sans-serif',
-                lineHeight: '1.2'
-              }}>
-                {displayStat.value}
-              </div>
-                <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'Inter, sans-serif', marginTop: '2px' }}>
+                <div style={{ 
+                  fontSize: '24px', 
+                  fontWeight: '700',
+                  color: 'var(--primary)',
+                  fontFamily: 'Inter, sans-serif',
+                  lineHeight: '1.2',
+                  marginBottom: '4px'
+                }}>
+                  {displayStat.value}
+                </div>
+                <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'Inter, sans-serif' }}>
                   {displayStat.label}
                 </div>
               </div>
@@ -522,7 +516,12 @@ export default function Leaderboards() {
           </div>
           
           {/* Additional Stats Grid */}
-          <div className="player-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '8px' }}>
+          <div className="player-stats" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', 
+            gap: '8px',
+            marginTop: '8px'
+          }}>
             <div style={{ textAlign: 'center', padding: '8px 4px' }}>
               <div style={{ 
                 fontSize: '12px', 
@@ -968,7 +967,7 @@ export default function Leaderboards() {
                                 flexShrink: 0
                               }}>
                                 <img 
-                                  src={'https://mc-heads.net/avatar/' + topPlayers.mostActive.name + '/32'}
+                                  src={'https://mc-heads.net/avatar/' + (topPlayers.mostActive.uuid || topPlayers.mostActive.name) + '/32'}
                                   alt={topPlayers.mostActive.name + "'s head"}
                                   style={{
                                     width: '100%',
@@ -1028,7 +1027,7 @@ export default function Leaderboards() {
                                 flexShrink: 0
                               }}>
                                 <img 
-                                  src={'https://mc-heads.net/avatar/' + topPlayers.topKiller.name + '/32'}
+                                  src={'https://mc-heads.net/avatar/' + (topPlayers.topKiller.uuid || topPlayers.topKiller.name) + '/32'}
                                   alt={topPlayers.topKiller.name + "'s head"}
                                   style={{
                                     width: '100%',
@@ -1088,7 +1087,7 @@ export default function Leaderboards() {
                                 flexShrink: 0
                               }}>
                                 <img 
-                                  src={'https://mc-heads.net/avatar/' + topPlayers.mostDeaths.name + '/32'}
+                                  src={'https://mc-heads.net/avatar/' + (topPlayers.mostDeaths.uuid || topPlayers.mostDeaths.name) + '/32'}
                                   alt={topPlayers.mostDeaths.name + "'s head"}
                                   style={{
                                     width: '100%',

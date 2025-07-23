@@ -518,9 +518,25 @@ body {
   }
   
   .player-stats {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 16px !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
     width: 100% !important;
+    margin-top: 0 !important;
+  }
+  
+  .player-stats > div {
+    padding: 12px 8px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .player-stats > div > div:first-child {
+    font-size: 16px !important;
+  }
+  
+  .player-stats > div > div:last-child {
+    font-size: 11px !important;
   }
 }
 
