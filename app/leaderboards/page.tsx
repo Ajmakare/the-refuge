@@ -273,15 +273,146 @@ export default function Leaderboards() {
         maxWidth: '100%',
         boxSizing: 'border-box'
       }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          gap: '16px',
-          width: '100%',
-          minWidth: 0
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
+        <style jsx>{`
+          @media (min-width: 769px) {
+            .discord-desktop-layout { display: block !important; }
+            .discord-mobile-layout { display: none !important; }
+          }
+          @media (max-width: 768px) {
+            .discord-desktop-layout { display: none !important; }
+            .discord-mobile-layout { display: flex !important; }
+          }
+        `}</style>
+        
+        {/* Desktop Layout */}
+        <div className="discord-desktop-layout" style={{ display: 'block' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            gap: '16px',
+            width: '100%',
+            minWidth: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                background: getRankColor(rank),
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                flexShrink: 0
+              }}>
+                <div style={{ transform: 'scale(0.9)' }}>
+                  {getRankIcon(rank)}
+                </div>
+              </div>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '14px',
+                overflow: 'hidden',
+                position: 'relative',
+                boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)',
+                flexShrink: 0
+              }}>
+                <img 
+                  src={`https://cdn.discordapp.com/avatars/${player.id}/${player.avatar}.png?size=128`}
+                  alt={player.username + "'s Discord avatar"}
+                  loading="lazy"
+                  decoding="async"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    // Fallback to Discord default avatar
+                    e.currentTarget.src = `https://cdn.discordapp.com/embed/avatars/${parseInt(player.discriminator) % 5}.png`;
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ 
+                  fontSize: '20px', 
+                  fontWeight: '700', 
+                  color: 'white',
+                  marginBottom: '4px',
+                  fontFamily: 'Inter, sans-serif',
+                  lineHeight: '1.2',
+                  wordBreak: 'break-word'
+                }}>
+                  {player.username}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    border: '1px solid rgba(139, 92, 246, 0.5)',
+                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>LVL</span>
+                    <span style={{ 
+                      fontSize: '16px', 
+                      fontWeight: '700', 
+                      color: 'white',
+                      fontFamily: 'Inter, sans-serif'
+                    }}>
+                      {player.level}
+                    </span>
+                  </div>
+                  <p style={{ 
+                    fontSize: '14px', 
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontFamily: 'Inter, sans-serif',
+                    lineHeight: '1.2',
+                    margin: 0
+                  }}>
+                    {formatNumber(player.message_count)} messages
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* XP Display */}
+            <div style={{ 
+              textAlign: 'center',
+              padding: '16px 24px',
+              borderRadius: '12px',
+              background: 'rgba(139, 92, 246, 0.15)',
+              border: '1px solid rgba(139, 92, 246, 0.4)',
+              flexShrink: 0,
+              minWidth: '140px',
+              maxWidth: '140px'
+            }}>
+              <div style={{ 
+                fontSize: '20px', 
+                fontWeight: '700',
+                color: '#8b5cf6',
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2',
+                marginBottom: '4px'
+              }}>
+                {formatNumber(player.xp)}
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'Inter, sans-serif' }}>
+                Total XP
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="discord-mobile-layout" style={{ display: 'none', flexDirection: 'column', padding: '0', paddingLeft: '15px' }}>
+          {/* Top Row: Rank + Avatar + Name/Level */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%', marginBottom: '16px' }}>
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -327,70 +458,89 @@ export default function Leaderboards() {
                 fontSize: '20px', 
                 fontWeight: '700', 
                 color: 'white',
-                marginBottom: '4px',
+                marginBottom: '8px',
                 fontFamily: 'Inter, sans-serif',
                 lineHeight: '1.2',
                 wordBreak: 'break-word'
               }}>
                 {player.username}
               </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  border: '1px solid rgba(139, 92, 246, 0.5)',
-                  boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
+              <div style={{
+                background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: '1px solid rgba(139, 92, 246, 0.5)',
+                boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>LVL</span>
+                <span style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '700', 
+                  color: 'white',
+                  fontFamily: 'Inter, sans-serif'
                 }}>
-                  <span style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>LVL</span>
-                  <span style={{ 
-                    fontSize: '16px', 
-                    fontWeight: '700', 
-                    color: 'white',
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                    {player.level}
-                  </span>
-                </div>
-                <p style={{ 
-                  fontSize: '14px', 
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  fontFamily: 'Inter, sans-serif',
-                  lineHeight: '1.2',
-                  margin: 0
-                }}>
-                  {formatNumber(player.message_count)} messages
-                </p>
+                  {player.level}
+                </span>
               </div>
             </div>
           </div>
           
-          {/* XP Display */}
+          {/* Bottom Row: Stats Grid */}
           <div style={{ 
-            textAlign: 'center',
-            padding: '16px 24px',
-            borderRadius: '12px',
-            background: 'rgba(139, 92, 246, 0.15)',
-            border: '1px solid rgba(139, 92, 246, 0.4)',
-            flexShrink: 0,
-            minWidth: '140px',
-            maxWidth: '140px'
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: '16px',
+            width: '100%'
           }}>
+            {/* Messages */}
             <div style={{ 
-              fontSize: '20px', 
-              fontWeight: '700',
-              color: '#8b5cf6',
-              fontFamily: 'Inter, sans-serif',
-              lineHeight: '1.2',
-              marginBottom: '4px'
+              textAlign: 'center',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              background: 'rgba(139, 92, 246, 0.15)',
+              border: '1px solid rgba(139, 92, 246, 0.4)',
+              boxShadow: '0 2px 8px rgba(139, 92, 246, 0.2)'
             }}>
-              {formatNumber(player.xp)}
+              <div style={{ 
+                fontSize: '18px', 
+                fontWeight: '700',
+                color: '#8b5cf6',
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2',
+                marginBottom: '4px'
+              }}>
+                {formatNumber(player.message_count)}
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'Inter, sans-serif' }}>
+                Messages
+              </div>
             </div>
-            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'Inter, sans-serif' }}>
-              Total XP
+            
+            {/* XP */}
+            <div style={{ 
+              textAlign: 'center',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              background: 'rgba(139, 92, 246, 0.15)',
+              border: '1px solid rgba(139, 92, 246, 0.4)',
+              boxShadow: '0 2px 8px rgba(139, 92, 246, 0.2)'
+            }}>
+              <div style={{ 
+                fontSize: '18px', 
+                fontWeight: '700',
+                color: '#8b5cf6',
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.2',
+                marginBottom: '4px'
+              }}>
+                {formatNumber(player.xp)}
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'Inter, sans-serif' }}>
+                Total XP
+              </div>
             </div>
           </div>
         </div>
@@ -894,7 +1044,7 @@ export default function Leaderboards() {
       {/* Main Content Container */}
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <div className="container" style={{ 
-          padding: '40px 32px 0 32px', 
+          padding: '40px 16px 0 16px', 
           maxWidth: '1200px', 
           margin: '0 auto', 
           flex: '1' 
@@ -974,7 +1124,7 @@ export default function Leaderboards() {
             {/* Leaderboard Content */}
             <div className="minecraft-card slide-up" style={{ 
               padding: '32px',
-              minWidth: '600px',
+              minWidth: '0px',
               maxWidth: '800px',
               width: '100%'
             }}>
@@ -1427,6 +1577,40 @@ export default function Leaderboards() {
           }
           .desktop-layout {
             display: block;
+          }
+        }
+        
+        /* Mobile responsive fixes */
+        @media (max-width: 768px) {
+          .container {
+            padding: 20px 16px 0 16px !important;
+            max-width: 100% !important;
+          }
+          
+          .leaderboard-content {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 24px !important;
+            margin-bottom: 40px !important;
+          }
+          
+          .leaderboard-sidebar {
+            width: 100% !important;
+            order: -1 !important;
+          }
+          
+          .minecraft-card {
+            min-width: 0 !important;
+            padding: 20px !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* Ensure proper spacing for mobile navigation */
+          nav {
+            margin: 0 -16px 16px -16px !important;
           }
         }
       `}</style>
