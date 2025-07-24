@@ -1150,7 +1150,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
       WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
       GROUP BY p.uuid, p.name, p.registered
       HAVING total_deaths > 0
-      ORDER BY total_deaths DESC
+      ORDER BY total_deaths DESC, p.name ASC
       LIMIT ?
     `;
 
