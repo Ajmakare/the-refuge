@@ -1077,7 +1077,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         p.registered as join_date,
         SUM(COALESCE(s.deaths, 0)) as total_deaths,
         SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
-        COUNT(DISTINCT k.id) as player_kills,
+        0 as player_kills,
         COALESCE(SUM(
           CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
                THEN MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
@@ -1087,7 +1087,6 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         MAX(s.${columns.sessionEnd}) as last_seen
       FROM ${tables.players} p
       LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
-      LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
       WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
       GROUP BY p.uuid, p.name, p.registered
       HAVING total_deaths > 0
@@ -1108,7 +1107,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           name: row.name,
           playtime: row.playtime || 0,
           sessions: row.sessions || 0,
-          kills: { mob: row.mob_kills || 0, player: row.player_kills || 0 }, // Include both mob and PvP kills
+          kills: { mob: row.mob_kills || 0, player: 0 }, // Only mob kills from sessions, PvP kills merged later
           deaths: row.total_deaths || 0,
           afkTime: undefined, // Not available in deaths query
           rank: null, // Not available in deaths query
@@ -1127,10 +1126,52 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
 }
 
 /**
+ * Validate player data for suspicious values that might indicate query issues
+ */
+function validatePlayerData(players, queryType) {
+  players.forEach(player => {
+    const mobKills = player.kills?.mob || 0;
+    const playerKills = player.kills?.player || 0;
+    const deaths = player.deaths || 0;
+    const playtime = player.playtime || 0;
+    
+    // Flag suspicious values that might indicate data multiplication issues
+    if (mobKills > 50000) {
+      console.warn(`⚠️  [${queryType}] Suspicious mob_kills for ${player.name}: ${mobKills.toLocaleString()}`);
+    }
+    if (playerKills > 1000) {
+      console.warn(`⚠️  [${queryType}] Suspicious player_kills for ${player.name}: ${playerKills.toLocaleString()}`);
+    }
+    if (deaths > 10000) {
+      console.warn(`⚠️  [${queryType}] Suspicious deaths for ${player.name}: ${deaths.toLocaleString()}`);
+    }
+    if (playtime > 365 * 24 * 60 * 60 * 1000) { // More than 1 year of playtime
+      console.warn(`⚠️  [${queryType}] Suspicious playtime for ${player.name}: ${Math.round(playtime/3600000)}h`);
+    }
+    
+    // Special debug for McChickenRibs
+    if (player.name && player.name.toLowerCase().includes('mcchickenribs')) {
+      console.log(`🔍 Debug data for ${player.name} [${queryType}]:`, {
+        mobKills: mobKills.toLocaleString(),
+        playerKills: playerKills.toLocaleString(), 
+        deaths: deaths.toLocaleString(),
+        playtimeHours: Math.round(playtime/3600000),
+        sessions: player.sessions || 0
+      });
+    }
+  });
+}
+
+/**
  * Merge and normalize player data across all leaderboards for consistency
  */
 function mergePlayerData(leaderboardData) {
   console.log('🔄 Merging player data across leaderboards for consistency...');
+  
+  // Validate data before merging
+  validatePlayerData(leaderboardData.mostActive, 'Most Active');
+  validatePlayerData(leaderboardData.topKillers, 'Top Killers');
+  validatePlayerData(leaderboardData.mostDeaths, 'Most Deaths');
   
   // Create a comprehensive player data map
   const playerMap = new Map();
