@@ -757,6 +757,36 @@ function detectColumnStructure(db, tables, callback) {
 function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, checkComplete) {
   // Load banned players list (UUIDs)
   const bannedUUIDs = loadBannedPlayers();
+  
+  // Debug: Check McChickenRibs raw data directly from database
+  const debugMcChickenRibs = `
+    SELECT 
+      p.uuid, p.name,
+      COUNT(DISTINCT s.id) as total_sessions,
+      SUM(COALESCE(s.deaths, 0)) as total_deaths_all_time,
+      SUM(COALESCE(s.mob_kills, 0)) as total_mob_kills_sessions,
+      (SELECT COUNT(*) FROM ${tables.kills} k WHERE k.${columns.killerUuid} = p.uuid) as total_pvp_kills_raw
+    FROM ${tables.players} p
+    LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+    WHERE LOWER(p.name) LIKE '%mcchickenribs%'
+    GROUP BY p.uuid, p.name
+    LIMIT 1
+  `;
+  
+  db.get(debugMcChickenRibs, [], (err, row) => {
+    if (!err && row) {
+      console.log(`🔍 McChickenRibs RAW DATABASE DATA:`, {
+        name: row.name,
+        uuid: row.uuid,
+        total_sessions: row.total_sessions,
+        total_deaths_all_time: row.total_deaths_all_time,
+        total_mob_kills_sessions: row.total_mob_kills_sessions,
+        total_pvp_kills_raw: row.total_pvp_kills_raw
+      });
+    } else {
+      console.log(`🔍 Could not find McChickenRibs in raw database query`);
+    }
+  });
   // Query 1: Most Active Players or Basic Player List
   if (tables.players) {
     if (tables.sessions && columns.playtime) {
@@ -1039,6 +1069,19 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           console.error('❌ Error querying combined kills:', err.message);
         } else {
           console.log(`🔍 Combined kills query returned ${rows.length} rows`);
+          
+          // Debug McChickenRibs specifically
+          const mcChickenRibs = rows.find(row => row.name && row.name.toLowerCase().includes('mcchickenribs'));
+          if (mcChickenRibs) {
+            console.log(`🔍 McChickenRibs raw data from combined kills query:`, {
+              mob_kills: mcChickenRibs.mob_kills,
+              player_kills: mcChickenRibs.player_kills,
+              total_kills: mcChickenRibs.total_kills,
+              playtime: mcChickenRibs.playtime,
+              sessions: mcChickenRibs.sessions
+            });
+          }
+          
           leaderboardData.topKillers = rows.map(row => ({
             uuid: row.uuid,
             name: row.name,
@@ -1102,6 +1145,20 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         if (rows.length > 0) {
           console.log(`🔍 Sample death data - Player: ${rows[0].name}, Deaths: ${rows[0].total_deaths}`);
         }
+        
+        // Debug: Check if McChickenRibs appears in deaths query
+        const mcChickenRibs = rows.find(row => row.name && row.name.toLowerCase().includes('mcchickenribs'));
+        if (mcChickenRibs) {
+          console.log(`🔍 McChickenRibs found in deaths query:`, {
+            total_deaths: mcChickenRibs.total_deaths,
+            mob_kills: mcChickenRibs.mob_kills,
+            playtime: mcChickenRibs.playtime,
+            sessions: mcChickenRibs.sessions
+          });
+        } else {
+          console.log(`🔍 McChickenRibs NOT found in deaths query (might have low death count or doesn't meet criteria)`);
+        }
+        
         leaderboardData.mostDeaths = rows.map(row => ({
           uuid: row.uuid,
           name: row.name,
