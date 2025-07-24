@@ -765,7 +765,11 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
       COUNT(DISTINCT s.id) as total_sessions,
       SUM(COALESCE(s.deaths, 0)) as total_deaths_all_time,
       SUM(COALESCE(s.mob_kills, 0)) as total_mob_kills_sessions,
-      (SELECT COUNT(*) FROM ${tables.kills} k WHERE k.${columns.killerUuid} = p.uuid) as total_pvp_kills_raw
+      (SELECT COUNT(*) FROM ${tables.kills} k WHERE k.${columns.killerUuid} = p.uuid) as total_pvp_kills_raw,
+      SUM(CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000 THEN COALESCE(s.deaths, 0) ELSE 0 END) as deaths_last_14_days,
+      MAX(s.${columns.sessionEnd}) as last_session_timestamp,
+      strftime('%s', 'now') as current_timestamp,
+      (strftime('%s', 'now') - 1209600) * 1000 as fourteen_days_ago_timestamp
     FROM ${tables.players} p
     LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
     WHERE LOWER(p.name) LIKE '%mcchickenribs%'
@@ -781,8 +785,23 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         total_sessions: row.total_sessions,
         total_deaths_all_time: row.total_deaths_all_time,
         total_mob_kills_sessions: row.total_mob_kills_sessions,
-        total_pvp_kills_raw: row.total_pvp_kills_raw
+        total_pvp_kills_raw: row.total_pvp_kills_raw,
+        deaths_last_14_days: row.deaths_last_14_days,
+        last_session_timestamp: row.last_session_timestamp,
+        current_timestamp: row.current_timestamp,
+        fourteen_days_ago_timestamp: row.fourteen_days_ago_timestamp
       });
+      
+      // Convert timestamps to readable dates for debugging
+      if (row.last_session_timestamp) {
+        const lastSessionDate = new Date(row.last_session_timestamp);
+        const fourteenDaysAgo = new Date(row.fourteen_days_ago_timestamp);
+        console.log(`🔍 McChickenRibs TIMESTAMP DEBUG:`, {
+          last_session_date: lastSessionDate.toISOString(),
+          fourteen_days_ago_date: fourteenDaysAgo.toISOString(),
+          is_recent: row.last_session_timestamp > row.fourteen_days_ago_timestamp
+        });
+      }
     } else {
       console.log(`🔍 Could not find McChickenRibs in raw database query`);
     }
@@ -1122,9 +1141,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         SUM(COALESCE(s.mob_kills, 0)) as mob_kills,
         0 as player_kills,
         COALESCE(SUM(
-          CASE WHEN s.${columns.sessionEnd} > (strftime('%s', 'now') - 1209600) * 1000
-               THEN MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
-               ELSE 0 END
+          MAX(0, (s.${columns.sessionEnd} - s.${columns.sessionStart}) - COALESCE(s.afk_time, 0))
         ), 0) as playtime,
         COUNT(DISTINCT s.id) as sessions,
         MAX(s.${columns.sessionEnd}) as last_seen
