@@ -1,0 +1,10 @@
+# Banned Players List
+# Add one Minecraft UUID per line to exclude them from leaderboards
+# Lines starting with # are comments and will be ignored
+# You can find player UUIDs from the PLAN database or online UUID lookup tools
+# Example UUIDs (replace with actual banned player UUIDs):
+# 123e4567-e89b-12d3-a456-426614174000
+# 456e7890-e89b-12d3-a456-426614174001
+
+# TODO: Replace this username with the actual UUID for Kage45
+f42e00c8-774e-464d-a543-af11993b2983

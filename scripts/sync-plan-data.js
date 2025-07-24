@@ -5,6 +5,117 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const dns = require('dns');
 
+/**
+ * Read and parse the banned players list (UUIDs)
+ */
+function loadBannedPlayers() {
+  const bannedUUIDs = new Set();
+  
+  try {
+    if (fs.existsSync(CONFIG.bannedPlayersPath)) {
+      const content = fs.readFileSync(CONFIG.bannedPlayersPath, 'utf8');
+      const lines = content.split('\n');
+      
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        // Skip empty lines and comments
+        if (trimmed && !trimmed.startsWith('#')) {
+          // Validate UUID format (basic check for UUID-like structure)
+          const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (uuidPattern.test(trimmed)) {
+            bannedUUIDs.add(trimmed.toLowerCase()); // Store as lowercase for consistency
+          } else {
+            console.warn(`⚠️  Invalid UUID format in banned-players.txt: ${trimmed}`);
+          }
+        }
+      });
+      
+      if (bannedUUIDs.size > 0) {
+        console.log(`🚫 Loaded ${bannedUUIDs.size} banned player UUIDs`);
+        // Only show first few UUIDs to avoid cluttering logs
+        const displayUUIDs = Array.from(bannedUUIDs).slice(0, 3);
+        console.log(`🚫 First few banned UUIDs: ${displayUUIDs.join(', ')}${bannedUUIDs.size > 3 ? '...' : ''}`);
+      } else {
+        console.log('📋 No valid UUIDs found in banned-players.txt');
+      }
+    } else {
+      console.log('📋 No banned-players.txt file found - all players will be included');
+    }
+  } catch (error) {
+    console.warn('⚠️  Warning: Could not read banned players file:', error.message);
+  }
+  
+  return bannedUUIDs;
+}
+
+/**
+ * Generate SQL WHERE clause to exclude banned players by UUID
+ */
+function getBannedPlayersFilter(bannedUUIDs, playerUuidColumn = 'p.uuid') {
+  if (bannedUUIDs.size === 0) {
+    return '';
+  }
+  
+  // Create UUID exclusion filter
+  const bannedList = Array.from(bannedUUIDs).map(uuid => `'${uuid.replace(/'/g, "''")}'`).join(', ');
+  return ` AND LOWER(${playerUuidColumn}) NOT IN (${bannedList})`;
+}
+
+/**
+ * Helper function to look up player UUIDs by username from the database
+ * Useful for converting usernames to UUIDs for the banned players list
+ */
+async function lookupPlayerUUID(username) {
+  if (!fs.existsSync(CONFIG.localSqlitePath)) {
+    console.log('❌ Database not found. Run sync first.');
+    return null;
+  }
+  
+  return new Promise((resolve) => {
+    const db = new sqlite3.Database(CONFIG.localSqlitePath, sqlite3.OPEN_READONLY, (err) => {
+      if (err) {
+        console.error('❌ Failed to open database:', err.message);
+        resolve(null);
+        return;
+      }
+    });
+
+    // Try different table naming schemes
+    const queries = [
+      `SELECT uuid, name FROM plan_players WHERE LOWER(name) = LOWER(?) LIMIT 1`,
+      `SELECT uuid, name FROM plan_users WHERE LOWER(name) = LOWER(?) LIMIT 1`,
+      `SELECT uuid, name FROM players WHERE LOWER(name) = LOWER(?) LIMIT 1`
+    ];
+
+    let found = false;
+    let queryIndex = 0;
+
+    function tryNextQuery() {
+      if (queryIndex >= queries.length || found) {
+        db.close();
+        if (!found) {
+          console.log(`❌ Player "${username}" not found in database`);
+          resolve(null);
+        }
+        return;
+      }
+
+      db.get(queries[queryIndex], [username], (err, row) => {
+        queryIndex++;
+        if (!err && row) {
+          found = true;
+          console.log(`✅ Found player: ${row.name} -> ${row.uuid}`);
+          resolve({ name: row.name, uuid: row.uuid });
+        } else {
+          tryNextQuery();
+        }
+      });
+    }
+
+    tryNextQuery();
+  });
+}
+
 // Configuration
 const CONFIG = {
   // Development mode - skip download if true
@@ -22,6 +133,7 @@ const CONFIG = {
   remoteSqlitePath: '/plugins/Plan/database.db', // Standard PLAN plugin database location
   localSqlitePath: './temp/Plan.db',
   outputJsonPath: '../public/data/leaderboards.json', // Relative to scripts directory
+  bannedPlayersPath: './banned-players.txt', // Path to banned players file
   
   // Data limits
   limits: {
@@ -643,6 +755,8 @@ function detectColumnStructure(db, tables, callback) {
  * Run queries with column mapping
  */
 function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, checkComplete) {
+  // Load banned players list (UUIDs)
+  const bannedUUIDs = loadBannedPlayers();
   // Query 1: Most Active Players or Basic Player List
   if (tables.players) {
     if (tables.sessions && columns.playtime) {
@@ -657,7 +771,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           ${columns.lastSeen ? `COALESCE(s.${columns.lastSeen}, p.registered) as last_seen` : 'p.registered as last_seen'}
         FROM ${tables.players} p
         LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid
-        WHERE COALESCE(s.${columns.playtime}, 0) > 0
+        WHERE COALESCE(s.${columns.playtime}, 0) > 0${getBannedPlayersFilter(bannedUUIDs)}
         ORDER BY COALESCE(s.${columns.playtime}, 0) DESC
         LIMIT ?
       `;
@@ -739,6 +853,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
         LEFT JOIN plan_extension_user_table_values ext ON p.uuid = ext.uuid 
           AND ext.col_1_value = 'primarygroup'
+        WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
         GROUP BY p.uuid, p.name, p.registered, ext.col_2_value
         HAVING SUM(COALESCE(s.${columns.sessionEnd} - s.${columns.sessionStart}, 0)) > 0
         ORDER BY activity_score DESC, playtime DESC
@@ -754,6 +869,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
           const basicPlayersQuery = `
             SELECT uuid, name, registered as join_date
             FROM ${tables.players} 
+            WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
             ORDER BY registered DESC
             LIMIT ?
           `;
@@ -799,6 +915,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
       const basicPlayersQuery = `
         SELECT uuid, name, registered as join_date
         FROM ${tables.players} 
+        WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
         ORDER BY registered DESC
         LIMIT ?
       `;
@@ -846,7 +963,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         FROM ${tables.players} p
         LEFT JOIN ${tables.kills} k ON p.uuid = k.uuid
         ${tables.sessions && columns.playtime ? `LEFT JOIN ${tables.sessions} s ON p.uuid = s.uuid` : ''}
-        WHERE ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) > 0` : '1=0'}
+        WHERE ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) > 0` : '1=0'}${getBannedPlayersFilter(bannedUUIDs)}
         ORDER BY ${mobKillsCol !== '0' ? `COALESCE(k.${mobKillsCol}, 0) DESC` : 'p.uuid'}
         LIMIT ?
       `;
@@ -890,6 +1007,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             MAX(s.${columns.sessionEnd}) as last_seen
           FROM ${tables.players} p
           LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
+          WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
           GROUP BY p.uuid, p.name, p.registered
         ),
         pvp_kills_summary AS (
@@ -898,6 +1016,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
             COUNT(k.id) as player_kills
           FROM ${tables.players} p
           LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
+          WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
           GROUP BY p.uuid
         )
         SELECT 
@@ -969,6 +1088,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
       FROM ${tables.players} p
       LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
       LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
+      WHERE 1=1${getBannedPlayersFilter(bannedPlayers)}
       GROUP BY p.uuid, p.name, p.registered
       HAVING total_deaths > 0
       ORDER BY total_deaths DESC
@@ -1239,4 +1359,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { main, CONFIG };
+module.exports = { main, CONFIG, lookupPlayerUUID };
