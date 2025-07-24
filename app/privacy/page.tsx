@@ -48,7 +48,7 @@ export default function Privacy() {
                   <strong>Minecraft Player Data:</strong> Public gameplay statistics from our Minecraft server including usernames, playtime, and game statistics. This data is already public through the PLAN plugin.
                 </li>
                 <li style={{ marginBottom: '8px' }}>
-                  <strong>Website Usage:</strong> Basic analytics through Google AdSense for website improvement and ad personalization.
+                  <strong>Website Usage:</strong> Basic analytics through Vercel for website improvement and performance monitoring.
                 </li>
                 <li style={{ marginBottom: '8px' }}>
                   <strong>Technical Data:</strong> IP addresses for rate limiting and security purposes (not stored permanently).
@@ -64,7 +64,6 @@ export default function Privacy() {
                 <li style={{ marginBottom: '8px' }}>Display leaderboards and server statistics</li>
                 <li style={{ marginBottom: '8px' }}>Improve website performance and user experience</li>
                 <li style={{ marginBottom: '8px' }}>Prevent abuse and ensure security</li>
-                <li style={{ marginBottom: '8px' }}>Show relevant advertisements through Google AdSense</li>
               </ul>
             </section>
 
@@ -76,9 +75,6 @@ export default function Privacy() {
                 We use the following third-party services:
               </p>
               <ul style={{ paddingLeft: '24px', marginBottom: '16px' }}>
-                <li style={{ marginBottom: '8px' }}>
-                  <strong>Google AdSense:</strong> For displaying advertisements. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>Google&apos;s Privacy Policy</a>
-                </li>
                 <li style={{ marginBottom: '8px' }}>
                   <strong>Vercel:</strong> For website hosting and analytics
                 </li>
