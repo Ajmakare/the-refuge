@@ -1161,6 +1161,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
         console.log(`🔍 Session Deaths query returned ${rows.length} rows`);
         if (rows.length > 0) {
           console.log(`🔍 Sample death data - Player: ${rows[0].name}, Deaths: ${rows[0].total_deaths}`);
+          console.log(`🔍 Top 10 deaths leaderboard:`, rows.map(r => `${r.name}: ${r.total_deaths} deaths`));
         }
         
         // Debug: Check if McChickenRibs appears in deaths query
