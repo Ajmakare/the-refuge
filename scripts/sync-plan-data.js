@@ -1088,7 +1088,7 @@ function runQueriesWithColumns(db, tables, columns, leaderboardData, scheme, che
       FROM ${tables.players} p
       LEFT JOIN ${tables.sessions} s ON p.id = s.${columns.userId}
       LEFT JOIN ${tables.kills} k ON p.uuid = k.${columns.killerUuid}
-      WHERE 1=1${getBannedPlayersFilter(bannedPlayers)}
+      WHERE 1=1${getBannedPlayersFilter(bannedUUIDs)}
       GROUP BY p.uuid, p.name, p.registered
       HAVING total_deaths > 0
       ORDER BY total_deaths DESC
