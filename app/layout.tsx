@@ -85,6 +85,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="ezoic-site-verification" content="xWyHwtHKPY3Di4PlaYnqZqTLtrtfYW" />
         <meta name="theme-color" content="#0a0a0a" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
